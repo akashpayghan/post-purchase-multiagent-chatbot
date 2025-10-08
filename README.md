@@ -79,7 +79,43 @@ An intelligent multi-agent system that:
 
 ---
 
-## 🏗 Architecture
+
+---
+
+## 🛠 Tech Stack
+
+### **Core Technologies**
+- **Python 3.12+**: Primary programming language
+- **Streamlit**: Web application framework
+- **LangGraph**: Multi-agent workflow orchestration
+- **OpenAI GPT-4**: Language understanding and generation
+- **Google Gemini**: Vision AI for image analysis
+
+### **Vector Database & Search**
+- **Pinecone**: Vector database for semantic search
+- **OpenAI Embeddings**: Text vectorization (1536-dim)
+
+### **Data Storage**
+- **Supabase**: PostgreSQL database for structured data
+- **Vector Store**: Product catalog, policies, FAQs
+
+### **Development Tools**
+- **pytest**: Testing framework
+- **python-dotenv**: Environment configuration
+- **uv/pip**: Package management
+
+---
+
+## 📦 Installation
+
+### Prerequisites
+
+- Python 3.12 or higher
+- OpenAI API key
+- Pinecone API key
+- Google Gemini API key (optional, for image analysis)
+- Supabase account (optional, for database)
+
 
 
 
