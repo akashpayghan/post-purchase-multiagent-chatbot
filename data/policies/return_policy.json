@@ -1,0 +1,73 @@
+{
+  "policy_name": "Standard Return Policy",
+  "last_updated": "2025-10-01",
+  "general_rules": {
+    "return_window_days": 30,
+    "return_window_description": "Items can be returned within 30 days of delivery",
+    "condition_requirement": "Items must be unused, unworn, and in original packaging with tags attached",
+    "proof_of_purchase": "Order number or receipt required"
+  },
+  "eligible_items": [
+    {
+      "category": "Clothing",
+      "returnable": true,
+      "conditions": ["Unworn", "Tags attached", "Original packaging"],
+      "exceptions": ["Undergarments", "Swimwear (if worn)", "Final sale items"]
+    },
+    {
+      "category": "Footwear",
+      "returnable": true,
+      "conditions": ["Unworn", "Original box", "No visible wear on soles"],
+      "exceptions": ["Custom-made shoes"]
+    },
+    {
+      "category": "Electronics",
+      "returnable": true,
+      "conditions": ["Unopened box", "All accessories included", "Serial number matches"],
+      "exceptions": ["Software (if opened)", "Earbuds/headphones (if opened)"],
+      "special_window_days": 15
+    }
+  ],
+  "non_returnable_items": [
+    "Gift cards",
+    "Personalized items",
+    "Final sale items",
+    "Perishable goods",
+    "Digital downloads"
+  ],
+  "refund_methods": [
+    {
+      "method": "original_payment",
+      "processing_time_days": 5,
+      "description": "Refund to original payment method"
+    },
+    {
+      "method": "store_credit",
+      "processing_time_days": 1,
+      "bonus_percentage": 10,
+      "description": "Instant store credit with 10% bonus"
+    }
+  ],
+  "shipping_costs": {
+    "return_shipping_paid_by": "customer",
+    "free_return_conditions": ["Defective item", "Wrong item sent", "Order value > $100"],
+    "return_label_cost": 7.99
+  },
+  "special_conditions": [
+    {
+      "condition": "defective_item",
+      "action": "Full refund + free return shipping",
+      "proof_required": "Photo of defect"
+    },
+    {
+      "condition": "wrong_item",
+      "action": "Immediate replacement + free return shipping",
+      "proof_required": "Photo of item and packaging"
+    },
+    {
+      "condition": "late_delivery",
+      "action": "15% discount or free return",
+      "threshold_days": 5
+    }
+  ]
+}

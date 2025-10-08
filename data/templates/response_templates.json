@@ -1,0 +1,32 @@
+{
+  "templates": [
+    {
+      "template_id": "TEMP001",
+      "name": "greeting",
+      "message": "Hi {customer_name}! I'm your AI shopping assistant. I'm here to help with any questions about your order #{order_id}. How can I assist you today?",
+      "tone": "friendly",
+      "use_case": "conversation_start"
+    },
+    {
+      "template_id": "TEMP002",
+      "name": "apology_delay",
+      "message": "I sincerely apologize for the delay with your {product_name}. Let me check the latest tracking information and see how I can make this right for you.",
+      "tone": "empathetic",
+      "use_case": "shipping_delay"
+    },
+    {
+      "template_id": "TEMP003",
+      "name": "exchange_confirmation",
+      "message": "Perfect! I've arranged an exchange for {new_product}. You'll receive a prepaid return label via email, and your new item will ship within 24 hours with tracking number {tracking}. Is there anything else I can help with?",
+      "tone": "efficient",
+      "use_case": "exchange_processed"
+    },
+    {
+      "template_id": "TEMP004",
+      "name": "refund_confirmation",
+      "message": "Your refund of ${amount} has been processed and will appear in your account within {processing_days} business days. You'll receive an email confirmation shortly. Thank you for giving us a try!",
+      "tone": "professional",
+      "use_case": "refund_issued"
+    }
+  ]
+}

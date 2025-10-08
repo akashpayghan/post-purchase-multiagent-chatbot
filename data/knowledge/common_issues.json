@@ -1,0 +1,73 @@
+{
+  "issues": [
+    {
+      "issue_id": "ISS001",
+      "issue_name": "Size runs small",
+      "category": "sizing",
+      "affected_products": ["PROD001", "PROD012", "PROD045"],
+      "frequency": "high",
+      "customer_sentiment": "frustrated",
+      "typical_resolution": "Exchange for one size up",
+      "success_rate": 85,
+      "avg_resolution_time_minutes": 8,
+      "customer_phrases": [
+        "too tight",
+        "doesn't fit",
+        "need bigger size",
+        "runs small",
+        "shrunk after washing"
+      ]
+    },
+    {
+      "issue_id": "ISS002",
+      "issue_name": "Color mismatch",
+      "category": "product_description",
+      "affected_products": ["PROD023", "PROD067"],
+      "frequency": "medium",
+      "customer_sentiment": "disappointed",
+      "typical_resolution": "Exchange for different color or 20% discount",
+      "success_rate": 70,
+      "avg_resolution_time_minutes": 12,
+      "customer_phrases": [
+        "not the same color",
+        "darker than photo",
+        "lighter than expected",
+        "color is off"
+      ]
+    },
+    {
+      "issue_id": "ISS003",
+      "issue_name": "Seam defect",
+      "category": "quality",
+      "affected_products": [],
+      "frequency": "low",
+      "customer_sentiment": "angry",
+      "typical_resolution": "Immediate replacement + compensation",
+      "success_rate": 95,
+      "avg_resolution_time_minutes": 5,
+      "customer_phrases": [
+        "seam came apart",
+        "stitching loose",
+        "defective",
+        "poor quality"
+      ]
+    },
+    {
+      "issue_id": "ISS004",
+      "issue_name": "Late delivery",
+      "category": "shipping",
+      "affected_products": [],
+      "frequency": "medium",
+      "customer_sentiment": "frustrated",
+      "typical_resolution": "Shipping refund + discount",
+      "success_rate": 80,
+      "avg_resolution_time_minutes": 10,
+      "customer_phrases": [
+        "still not arrived",
+        "delayed",
+        "where is my order",
+        "taking too long"
+      ]
+    }
+  ]
+}

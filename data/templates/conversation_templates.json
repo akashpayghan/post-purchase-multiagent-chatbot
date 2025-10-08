@@ -1,0 +1,270 @@
+{
+  "templates": {
+    "greetings": [
+      {
+        "template_id": "GREET001",
+        "scenario": "initial_contact",
+        "tone": "friendly",
+        "message": "Hi {customer_name}! 👋 I'm your AI shopping assistant. I can help with order #{order_id} or any questions you have. What brings you here today?",
+        "variables": ["customer_name", "order_id"]
+      },
+      {
+        "template_id": "GREET002",
+        "scenario": "returning_customer",
+        "tone": "warm",
+        "message": "Welcome back, {customer_name}! Great to see you again. How can I assist you today?",
+        "variables": ["customer_name"]
+      },
+      {
+        "template_id": "GREET003",
+        "scenario": "vip_customer",
+        "tone": "personalized",
+        "message": "Hello {customer_name}! As one of our valued VIP customers, I'm here to provide you with priority assistance. How may I help you today?",
+        "variables": ["customer_name"]
+      },
+      {
+        "template_id": "GREET004",
+        "scenario": "proactive_outreach",
+        "tone": "helpful",
+        "message": "Hi {customer_name}! I noticed your {product_name} was delivered {days_ago}. Just checking in to make sure everything arrived perfectly! Any questions?",
+        "variables": ["customer_name", "product_name", "days_ago"]
+      }
+    ],
+    "acknowledgments": [
+      {
+        "template_id": "ACK001",
+        "scenario": "issue_understood",
+        "tone": "empathetic",
+        "message": "I completely understand your concern about {issue_description}. Let me look into this right away and find the best solution for you.",
+        "variables": ["issue_description"]
+      },
+      {
+        "template_id": "ACK002",
+        "scenario": "frustration_detected",
+        "tone": "apologetic",
+        "message": "I'm truly sorry for the frustration this has caused, {customer_name}. Your satisfaction is our priority, and I'm here to make this right.",
+        "variables": ["customer_name"]
+      },
+      {
+        "template_id": "ACK003",
+        "scenario": "waiting_apology",
+        "tone": "patient",
+        "message": "Thank you for your patience while I review your {item_type}. I'm working on finding the perfect solution for you.",
+        "variables": ["item_type"]
+      }
+    ],
+    "information_gathering": [
+      {
+        "template_id": "INFO001",
+        "scenario": "need_order_number",
+        "tone": "helpful",
+        "message": "To assist you better, could you please provide your order number? You can find it in your confirmation email or account dashboard.",
+        "variables": []
+      },
+      {
+        "template_id": "INFO002",
+        "scenario": "request_photo",
+        "tone": "collaborative",
+        "message": "Would you mind uploading a quick photo of {item_description}? This will help me process your {action_type} much faster! 📸",
+        "variables": ["item_description", "action_type"]
+      },
+      {
+        "template_id": "INFO003",
+        "scenario": "clarify_preference",
+        "tone": "consultative",
+        "message": "I want to make sure I get this right for you. Would you prefer: Option A) {option_a} or Option B) {option_b}?",
+        "variables": ["option_a", "option_b"]
+      },
+      {
+        "template_id": "INFO004",
+        "scenario": "size_preference",
+        "tone": "helpful",
+        "message": "I see you ordered size {current_size}. Based on customer feedback, this item tends to run {size_tendency}. Would you like to exchange for a {recommended_size} instead?",
+        "variables": ["current_size", "size_tendency", "recommended_size"]
+      }
+    ],
+    "solutions_offered": [
+      {
+        "template_id": "SOL001",
+        "scenario": "exchange_offer",
+        "tone": "solution_focused",
+        "message": "Great news! I can send you {new_product} with free expedited shipping. It will arrive in {delivery_days} days. Your return label will be emailed immediately. Sound good?",
+        "variables": ["new_product", "delivery_days"]
+      },
+      {
+        "template_id": "SOL002",
+        "scenario": "refund_offer",
+        "tone": "professional",
+        "message": "I've processed a full refund of ${refund_amount} to your {payment_method}. You'll see it in {processing_days} business days. You'll receive a confirmation email shortly.",
+        "variables": ["refund_amount", "payment_method", "processing_days"]
+      },
+      {
+        "template_id": "SOL003",
+        "scenario": "store_credit_offer",
+        "tone": "value_focused",
+        "message": "Here's an even better option: I can give you ${original_amount} + 10% bonus (${bonus_amount}) in instant store credit. That's ${total_credit} available immediately! Would you like that?",
+        "variables": ["original_amount", "bonus_amount", "total_credit"]
+      },
+      {
+        "template_id": "SOL004",
+        "scenario": "multiple_options",
+        "tone": "empowering",
+        "message": "I have {option_count} great solutions for you:\n\n1️⃣ {option_1}\n2️⃣ {option_2}\n3️⃣ {option_3}\n\nWhich works best for you?",
+        "variables": ["option_count", "option_1", "option_2", "option_3"]
+      },
+      {
+        "template_id": "SOL005",
+        "scenario": "compensation_added",
+        "tone": "generous",
+        "message": "To make up for this inconvenience, I'm also adding {compensation_description} to your account. It's the least we can do!",
+        "variables": ["compensation_description"]
+      }
+    ],
+    "confirmations": [
+      {
+        "template_id": "CONF001",
+        "scenario": "action_completed",
+        "tone": "efficient",
+        "message": "✅ All done! I've {action_taken}. You'll receive a confirmation email at {email} within the next few minutes. Reference number: {reference_number}",
+        "variables": ["action_taken", "email", "reference_number"]
+      },
+      {
+        "template_id": "CONF002",
+        "scenario": "tracking_provided",
+        "tone": "informative",
+        "message": "Your {item_type} is on its way! 📦\n\nTracking: {tracking_number}\nCarrier: {carrier}\nExpected delivery: {delivery_date}\n\nTrack it here: {tracking_link}",
+        "variables": ["item_type", "tracking_number", "carrier", "delivery_date", "tracking_link"]
+      },
+      {
+        "template_id": "CONF003",
+        "scenario": "next_steps",
+        "tone": "clear",
+        "message": "Here's what happens next:\n\n1. {step_1}\n2. {step_2}\n3. {step_3}\n\nI'll send you updates at each stage!",
+        "variables": ["step_1", "step_2", "step_3"]
+      }
+    ],
+    "recommendations": [
+      {
+        "template_id": "REC001",
+        "scenario": "alternative_products",
+        "tone": "consultative",
+        "message": "Based on your preferences, I found {count} items you might love even more:\n\n⭐ {product_1} - {reason_1}\n⭐ {product_2} - {reason_2}\n⭐ {product_3} - {reason_3}\n\nWant details on any of these?",
+        "variables": ["count", "product_1", "reason_1", "product_2", "reason_2", "product_3", "reason_3"]
+      },
+      {
+        "template_id": "REC002",
+        "scenario": "size_recommendation",
+        "tone": "confident",
+        "message": "Looking at your order history, you typically wear {typical_size} in {category}. For this {brand} item, I'd recommend {recommended_size} based on {reason}.",
+        "variables": ["typical_size", "category", "brand", "recommended_size", "reason"]
+      }
+    ],
+    "apologies": [
+      {
+        "template_id": "APOL001",
+        "scenario": "defective_product",
+        "tone": "sincere",
+        "message": "I'm so sorry your {product_name} arrived defective. This absolutely shouldn't have happened. Let me make this right immediately.",
+        "variables": ["product_name"]
+      },
+      {
+        "template_id": "APOL002",
+        "scenario": "shipping_delay",
+        "tone": "empathetic",
+        "message": "I sincerely apologize for the delay with your order. I know how frustrating waiting can be. Let me check the status and see how we can expedite this for you.",
+        "variables": []
+      },
+      {
+        "template_id": "APOL003",
+        "scenario": "wrong_item",
+        "tone": "accountable",
+        "message": "I'm truly sorry we sent you the wrong item. That's completely our mistake. I'm arranging a replacement {correct_item} right now with priority shipping.",
+        "variables": ["correct_item"]
+      }
+    ],
+    "escalations": [
+      {
+        "template_id": "ESC001",
+        "scenario": "transfer_to_human",
+        "tone": "helpful",
+        "message": "I'd like to connect you with {agent_name}, one of our senior specialists who can give you personalized attention. They're ready to help you now!",
+        "variables": ["agent_name"]
+      },
+      {
+        "template_id": "ESC002",
+        "scenario": "complex_issue",
+        "tone": "professional",
+        "message": "This situation needs special attention. Let me transfer you to our {department} team who handles these cases specifically. One moment please!",
+        "variables": ["department"]
+      },
+      {
+        "template_id": "ESC003",
+        "scenario": "customer_requested",
+        "tone": "accommodating",
+        "message": "Of course! I completely understand. Let me connect you with {role} right away. Please hold for just a moment.",
+        "variables": ["role"]
+      }
+    ],
+    "closings": [
+      {
+        "template_id": "CLOSE001",
+        "scenario": "issue_resolved",
+        "tone": "satisfied",
+        "message": "Perfect! I'm glad we could resolve this for you, {customer_name}. Is there anything else I can help you with today? 😊",
+        "variables": ["customer_name"]
+      },
+      {
+        "template_id": "CLOSE002",
+        "scenario": "follow_up_offer",
+        "tone": "caring",
+        "message": "You're all set! If you have any questions or concerns, I'm here 24/7. Enjoy your {product_name}! 🎉",
+        "variables": ["product_name"]
+      },
+      {
+        "template_id": "CLOSE003",
+        "scenario": "feedback_request",
+        "tone": "appreciative",
+        "message": "Thank you for chatting with me today! If you have a moment, I'd love to hear about your experience. Have a wonderful day! ⭐",
+        "variables": []
+      },
+      {
+        "template_id": "CLOSE004",
+        "scenario": "compensation_provided",
+        "tone": "generous",
+        "message": "All done! I've added {compensation} to your account as a thank you for your patience. We appreciate you, {customer_name}!",
+        "variables": ["compensation", "customer_name"]
+      }
+    ],
+    "proactive_messages": [
+      {
+        "template_id": "PROACT001",
+        "scenario": "shipping_delay_warning",
+        "tone": "transparent",
+        "message": "Quick heads up: Your order {order_id} is running about {delay_days} days behind schedule due to {reason}. I'm monitoring it closely and will keep you updated! Want me to look into expediting?",
+        "variables": ["order_id", "delay_days", "reason"]
+      },
+      {
+        "template_id": "PROACT002",
+        "scenario": "post_delivery_check",
+        "tone": "friendly",
+        "message": "Hi {customer_name}! Your {product_name} was delivered {delivery_time}. Hope it's perfect! Quick question - how does it fit/look? Any concerns?",
+        "variables": ["customer_name", "product_name", "delivery_time"]
+      },
+      {
+        "template_id": "PROACT003",
+        "scenario": "weather_alert",
+        "tone": "caring",
+        "message": "Weather alert! ⚠️ Your package arrives tomorrow during {weather_condition}. It's fully protected, but please bring it inside quickly! Delivery between {time_window}.",
+        "variables": ["weather_condition", "time_window"]
+      }
+    ]
+  },
+  "template_usage_guidelines": {
+    "personalization": "Always use customer name when available",
+    "emojis": "Use sparingly and appropriately for tone",
+    "formatting": "Use bullet points and line breaks for readability",
+    "links": "Provide tracking and reference links when applicable",
+    "tone_matching": "Match customer's communication style",
+    "brevity": "Keep messages concise but complete"
+  }
+}

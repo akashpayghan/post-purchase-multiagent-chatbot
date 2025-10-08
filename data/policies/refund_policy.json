@@ -1,0 +1,270 @@
+{
+  "policy_name": "Refund Policy",
+  "last_updated": "2025-10-01",
+  "version": "2.0",
+  "general_principles": {
+    "customer_satisfaction_guarantee": true,
+    "hassle_free_returns": true,
+    "refund_window_days": 30,
+    "processing_commitment": "Fast and transparent refund process"
+  },
+  "refund_methods": [
+    {
+      "method": "original_payment_method",
+      "priority": 1,
+      "processing_time": {
+        "credit_card": "5-7 business days",
+        "debit_card": "5-10 business days",
+        "paypal": "3-5 business days",
+        "bank_transfer": "7-10 business days"
+      },
+      "description": "Refund returned to original payment source",
+      "conditions": ["Default method", "Most common choice"]
+    },
+    {
+      "method": "store_credit",
+      "priority": 2,
+      "processing_time": "Instant",
+      "bonus_percentage": 10,
+      "expiration_days": 365,
+      "transferable": false,
+      "description": "Instant store credit with 10% bonus value",
+      "benefits": [
+        "Immediate availability",
+        "No expiration concerns",
+        "Extra purchasing power",
+        "Can be used on sale items"
+      ],
+      "conditions": ["Customer must opt-in", "Applied to account"]
+    },
+    {
+      "method": "gift_card",
+      "priority": 3,
+      "processing_time": "1 business day",
+      "bonus_percentage": 5,
+      "expiration_days": null,
+      "transferable": true,
+      "description": "Physical or digital gift card with 5% bonus",
+      "conditions": ["Available for refunds over $25", "Can be gifted to others"]
+    },
+    {
+      "method": "partial_refund",
+      "priority": 4,
+      "use_cases": [
+        "Item used but defective",
+        "Missing accessories",
+        "Minor damage customer keeps item"
+      ],
+      "percentage_range": "10-50% of original price",
+      "description": "Partial refund when full return not needed"
+    }
+  ],
+  "refund_eligibility": [
+    {
+      "category": "full_refund",
+      "conditions": [
+        "Item returned within 30 days",
+        "Original condition with tags",
+        "Proof of purchase provided",
+        "Item not on exclusion list"
+      ],
+      "includes": ["Product price", "Original shipping (if defective)"],
+      "excludes": ["Return shipping (unless defective/wrong item)"]
+    },
+    {
+      "category": "partial_refund",
+      "conditions": [
+        "Item shows minor wear",
+        "Missing original packaging",
+        "Returned after 30 days but before 60 days",
+        "Non-defective item opened (certain categories)"
+      ],
+      "refund_percentage": "50-80% depending on condition",
+      "assessment": "Visual inspection required"
+    },
+    {
+      "category": "no_refund",
+      "conditions": [
+        "Returned after 60 days",
+        "Item damaged by customer",
+        "Non-returnable category",
+        "Final sale item",
+        "Missing proof of purchase"
+      ]
+    }
+  ],
+  "refund_timeline": {
+    "item_received_at_warehouse": "Inspection begins within 24 hours",
+    "inspection_duration": "1-2 business days",
+    "refund_initiated": "Within 24 hours of approval",
+    "funds_available": "5-10 business days depending on payment method",
+    "notification_sent": "Email confirmation at each stage",
+    "total_process_time": "7-12 business days on average"
+  },
+  "special_circumstances": [
+    {
+      "circumstance": "defective_product",
+      "refund_type": "full_refund",
+      "includes": ["Product cost", "Original shipping", "Return shipping"],
+      "additional_compensation": "10% discount code for inconvenience",
+      "proof_required": "Photo of defect",
+      "processing_priority": "expedited",
+      "processing_time": "1-3 business days"
+    },
+    {
+      "circumstance": "wrong_item_sent",
+      "refund_type": "full_refund",
+      "includes": ["Product cost", "All shipping costs"],
+      "additional_options": [
+        "Keep wrong item at no charge (under $20 value)",
+        "Immediate replacement shipment"
+      ],
+      "proof_required": "Photo of incorrect item",
+      "processing_priority": "expedited"
+    },
+    {
+      "circumstance": "late_delivery",
+      "refund_type": "shipping_refund",
+      "conditions": {
+        "minor_delay_1_3_days": "Shipping cost refund",
+        "major_delay_4_7_days": "Shipping + 15% product refund",
+        "severe_delay_over_7_days": "Full refund option available"
+      },
+      "automatic_processing": true
+    },
+    {
+      "circumstance": "changed_mind",
+      "refund_type": "standard_refund",
+      "includes": ["Product cost only"],
+      "excludes": ["Shipping costs"],
+      "return_shipping_paid_by": "customer",
+      "restocking_fee": 0,
+      "conditions": ["Within 30 days", "Unused condition"]
+    },
+    {
+      "circumstance": "gift_return",
+      "refund_type": "store_credit",
+      "includes": ["Product value at purchase price"],
+      "requires": "Gift receipt or order number",
+      "alternative": "Exchange for different item",
+      "no_cash_refund": true
+    },
+    {
+      "circumstance": "duplicate_order",
+      "refund_type": "full_refund",
+      "includes": ["Product cost", "Shipping cost"],
+      "processing": "Automatic if caught before shipment",
+      "return_required": false,
+      "processing_priority": "immediate"
+    }
+  ],
+  "non_refundable_items": [
+    {
+      "item_type": "personalized_custom_items",
+      "reason": "Made to order",
+      "exceptions": ["Defective upon arrival", "Wrong personalization"]
+    },
+    {
+      "item_type": "final_sale",
+      "reason": "Marked as final sale at purchase",
+      "exceptions": ["Defective", "Wrong item sent"]
+    },
+    {
+      "item_type": "digital_downloads",
+      "reason": "Immediate access provided",
+      "exceptions": ["Technical issues preventing access"]
+    },
+    {
+      "item_type": "gift_cards",
+      "reason": "Payment instrument",
+      "exceptions": ["Unused and requested within 14 days"]
+    },
+    {
+      "item_type": "intimate_apparel",
+      "reason": "Hygiene policy",
+      "exceptions": ["Defective", "Tags still attached and sealed packaging"]
+    },
+    {
+      "item_type": "perishable_goods",
+      "reason": "Limited shelf life",
+      "exceptions": ["Arrived spoiled or damaged"]
+    }
+  ],
+  "refund_verification": {
+    "inspection_criteria": [
+      "Item authenticity check",
+      "Condition assessment",
+      "Completeness verification (all accessories)",
+      "Tag and packaging status",
+      "Serial number match (electronics)"
+    ],
+    "photo_documentation": "All refunds photographed",
+    "dispute_resolution": "Photos available to customer upon request",
+    "quality_assurance": "Random quality checks"
+  },
+  "customer_tiers": {
+    "vip_customers": {
+      "definition": "10+ orders or $1000+ lifetime spend",
+      "benefits": [
+        "Instant refund approval",
+        "No inspection wait",
+        "Free return shipping always",
+        "Extended 60-day window",
+        "Advanced replacement option"
+      ]
+    },
+    "premium_customers": {
+      "definition": "5-9 orders or $500-999 lifetime spend",
+      "benefits": [
+        "Priority processing",
+        "Free return shipping on defects",
+        "45-day window",
+        "Expedited refund processing"
+      ]
+    },
+    "regular_customers": {
+      "definition": "1-4 orders",
+      "benefits": ["Standard 30-day window", "Standard processing"]
+    }
+  },
+  "refund_abuse_prevention": {
+    "monitoring": true,
+    "red_flags": [
+      "Multiple returns same item",
+      "High return rate (>50%)",
+      "Worn items returned",
+      "Serial number mismatches"
+    ],
+    "actions": [
+      "Account review",
+      "Temporary return privileges suspension",
+      "Mandatory inspection for all returns",
+      "Store credit only option"
+    ],
+    "appeal_process": "Email refunds@example.com with explanation"
+  },
+  "refund_notifications": {
+    "channels": ["Email", "SMS", "App push notification"],
+    "stages": [
+      "Return received",
+      "Inspection in progress",
+      "Refund approved",
+      "Refund initiated",
+      "Refund completed"
+    ],
+    "tracking": "Real-time status in customer account"
+  },
+  "tax_refunds": {
+    "sales_tax_refunded": true,
+    "processing": "Automatic with product refund",
+    "vat_international": "Refunded according to local regulations",
+    "customs_duties": "Customer must file claim with customs"
+  },
+  "contact_refund_support": {
+    "email": "refunds@example.com",
+    "phone": "1-800-REFUND-1",
+    "live_chat": "Available 24/7",
+    "response_time": "Within 4 hours",
+    "escalation": "Manager review within 24 hours"
+  }
+}

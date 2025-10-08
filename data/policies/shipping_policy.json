@@ -1,0 +1,187 @@
+{
+  "policy_name": "Shipping Policy",
+  "last_updated": "2025-10-01",
+  "version": "2.0",
+  "shipping_methods": [
+    {
+      "method_id": "standard",
+      "name": "Standard Shipping",
+      "delivery_time_days": "5-7 business days",
+      "cost": {
+        "base_cost": 7.99,
+        "free_threshold": 50.00,
+        "currency": "USD"
+      },
+      "tracking": true,
+      "insurance_included": false,
+      "available_regions": ["Continental US", "Canada"],
+      "description": "Affordable shipping for non-urgent orders"
+    },
+    {
+      "method_id": "priority",
+      "name": "Priority Shipping",
+      "delivery_time_days": "3-4 business days",
+      "cost": {
+        "base_cost": 14.99,
+        "free_threshold": 100.00,
+        "currency": "USD"
+      },
+      "tracking": true,
+      "insurance_included": true,
+      "insurance_max_value": 500,
+      "available_regions": ["Continental US", "Canada", "Alaska", "Hawaii"],
+      "description": "Faster delivery with insurance coverage"
+    },
+    {
+      "method_id": "express",
+      "name": "Express Shipping",
+      "delivery_time_days": "1-2 business days",
+      "cost": {
+        "base_cost": 24.99,
+        "free_threshold": 200.00,
+        "currency": "USD"
+      },
+      "tracking": true,
+      "insurance_included": true,
+      "insurance_max_value": 1000,
+      "available_regions": ["Continental US"],
+      "cutoff_time": "12:00 PM EST",
+      "description": "Next-day or 2-day delivery for urgent orders"
+    },
+    {
+      "method_id": "international",
+      "name": "International Shipping",
+      "delivery_time_days": "10-21 business days",
+      "cost": {
+        "base_cost": 29.99,
+        "currency": "USD",
+        "customs_fees": "Customer responsible"
+      },
+      "tracking": true,
+      "insurance_included": true,
+      "insurance_max_value": 300,
+      "available_regions": ["International"],
+      "restrictions": ["Some countries excluded", "Customs clearance required"],
+      "description": "Worldwide shipping with customs support"
+    }
+  ],
+  "processing_time": {
+    "standard_orders": "1-2 business days",
+    "custom_orders": "3-5 business days",
+    "holidays_impact": "Additional 1-2 days during peak seasons",
+    "cutoff_time_same_day": "2:00 PM EST"
+  },
+  "tracking_information": {
+    "tracking_available": true,
+    "tracking_update_frequency": "Every 24 hours",
+    "tracking_start_time": "Within 24 hours of shipment",
+    "carrier_partners": ["USPS", "UPS", "FedEx", "DHL"],
+    "tracking_notification_channels": ["Email", "SMS", "App Push"]
+  },
+  "shipping_restrictions": {
+    "po_boxes": {
+      "allowed": true,
+      "exceptions": ["Express shipping not available to PO Boxes"]
+    },
+    "address_validation": {
+      "required": true,
+      "auto_correction": true,
+      "verification_service": "USPS Address Verification"
+    },
+    "restricted_items": [
+      "Hazardous materials",
+      "Lithium batteries (international)",
+      "Aerosols",
+      "Flammable items"
+    ],
+    "weight_limits": {
+      "standard": "50 lbs",
+      "express": "30 lbs",
+      "international": "20 lbs"
+    }
+  },
+  "delivery_issues": [
+    {
+      "issue_type": "package_lost",
+      "investigation_time_days": 7,
+      "resolution": "Full refund or replacement after investigation",
+      "claim_requirement": "File claim with tracking number"
+    },
+    {
+      "issue_type": "package_damaged",
+      "investigation_time_days": 3,
+      "resolution": "Replacement shipped immediately with photos",
+      "claim_requirement": "Photos of damaged package and product"
+    },
+    {
+      "issue_type": "delayed_delivery",
+      "compensation": {
+        "minor_delay_1_3_days": "5% discount on next order",
+        "major_delay_4_7_days": "15% refund + free shipping next order",
+        "severe_delay_over_7_days": "Full shipping refund + 20% order discount"
+      }
+    },
+    {
+      "issue_type": "incorrect_address",
+      "responsibility": "customer",
+      "rerouting_fee": 15.00,
+      "rerouting_available": "Within 24 hours of shipment only"
+    },
+    {
+      "issue_type": "delivery_attempted_no_access",
+      "redelivery_attempts": 3,
+      "hold_at_location": "Available upon request",
+      "return_to_sender_after_days": 10
+    }
+  ],
+  "special_services": {
+    "signature_required": {
+      "available": true,
+      "cost": 5.00,
+      "automatic_threshold": 200.00
+    },
+    "saturday_delivery": {
+      "available": true,
+      "additional_cost": 10.00,
+      "shipping_methods": ["priority", "express"]
+    },
+    "gift_wrapping": {
+      "available": true,
+      "cost": 7.50,
+      "includes": ["Gift box", "Ribbon", "Gift card"]
+    },
+    "hold_for_pickup": {
+      "available": true,
+      "locations": "Carrier facilities",
+      "hold_duration_days": 7
+    }
+  },
+  "international_specific": {
+    "customs_documentation": "Provided automatically",
+    "duties_and_taxes": "Customer responsible",
+    "customs_value_declaration": "Declared at purchase price",
+    "prohibited_countries": ["North Korea", "Iran", "Syria"],
+    "shipping_partners": {
+      "europe": "DHL Express",
+      "asia": "FedEx International",
+      "australia": "Australia Post",
+      "latin_america": "DHL"
+    }
+  },
+  "holiday_shipping": {
+    "peak_season": "November 15 - December 25",
+    "recommended_order_dates": {
+      "standard": "December 10",
+      "priority": "December 15",
+      "express": "December 20"
+    },
+    "guarantees_suspended": "December 15-25",
+    "additional_processing_time": "1-3 days"
+  },
+  "contact_support": {
+    "shipping_inquiries": "shipping@example.com",
+    "phone": "1-800-SHIP-NOW",
+    "hours": "Monday-Friday 8AM-8PM EST",
+    "live_chat": "Available 24/7"
+  }
+}

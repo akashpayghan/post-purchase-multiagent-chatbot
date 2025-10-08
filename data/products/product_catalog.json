@@ -1,0 +1,57 @@
+[
+  {
+    "product_id": "PROD001",
+    "name": "Men's Classic Fit Cotton T-Shirt",
+    "category": "Clothing",
+    "subcategory": "T-Shirts",
+    "brand": "ComfortWear",
+    "price": 29.99,
+    "currency": "USD",
+    "sizes": ["S", "M", "L", "XL", "XXL"],
+    "colors": ["White", "Black", "Navy", "Gray"],
+    "description": "Premium 100% cotton t-shirt with classic fit. Pre-shrunk fabric ensures consistent sizing. Breathable and comfortable for everyday wear.",
+    "features": ["100% Cotton", "Pre-shrunk", "Machine Washable", "Reinforced Seams"],
+    "dimensions": {
+      "length_cm": 71,
+      "chest_width_cm": 51,
+      "weight_grams": 200
+    },
+    "images": [
+      "https://thebearhouse.com/cdn/shop/files/TSH-DAVID-BL_1.jpg?v=1758545604&width=1080",
+      "https://thebearhouse.com/cdn/shop/files/TSH-SPOY-BR_1.jpg?v=1758544759&width=1080"
+    ],
+    "stock_status": "in_stock",
+    "rating": 4.5,
+    "review_count": 342,
+    "common_return_reasons": ["Size too small", "Color not as expected"],
+    "return_rate_percentage": 12.5,
+    "tags": ["casual", "basic", "summer", "cotton", "comfortable"]
+  },
+  {
+    "product_id": "PROD002",
+    "name": "Women's Running Shoes",
+    "category": "Footwear",
+    "subcategory": "Athletic Shoes",
+    "brand": "AeroSport",
+    "price": 89.99,
+    "currency": "USD",
+    "sizes": ["6", "7", "8", "9", "10"],
+    "colors": ["Black/Pink", "White/Blue", "Gray/Purple"],
+    "description": "Lightweight running shoes with breathable mesh upper and responsive cushioning. Designed for long-distance comfort and performance.",
+    "features": ["Breathable Mesh", "EVA Cushioning", "Anti-Slip Outsole", "Arch Support"],
+    "dimensions": {
+      "length_cm": 26,
+      "width_cm": 9.5,
+      "weight_grams": 280
+    },
+    "images": [
+      "https://static.nike.com/a/images/c_limit,w_592,f_auto/t_product_v1/36a5ba42-47b8-44c3-81f4-d491786575e5/W+NIKE+VOMERO+PREMIUM.png"
+    ],
+    "stock_status": "in_stock",
+    "rating": 4.7,
+    "review_count": 856,
+    "common_return_reasons": ["Size mismatch", "Arch support insufficient"],
+    "return_rate_percentage": 18.3,
+    "tags": ["running", "athletic", "lightweight", "performance", "cushioned"]
+  }
+]

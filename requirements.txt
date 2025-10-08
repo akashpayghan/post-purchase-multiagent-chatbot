@@ -1,0 +1,12 @@
+streamlit
+python-dotenv
+openai
+google-generativeai
+pinecone
+supabase
+langgraph
+langchain-core
+langchain-openai
+Pillow
+numpy
+pytest

@@ -1,0 +1,318 @@
+{
+  "escalation_framework": {
+    "version": "1.0",
+    "last_updated": "2025-10-01",
+    "purpose": "Define when and how to escalate customer issues to human agents"
+  },
+  "escalation_tiers": [
+    {
+      "tier": 1,
+      "name": "AI Agent Resolution",
+      "handler": "AI Chatbot",
+      "capabilities": [
+        "Standard returns/exchanges",
+        "Policy questions",
+        "Order status",
+        "Simple product recommendations",
+        "Tracking updates"
+      ],
+      "resolution_target_minutes": 5,
+      "success_rate_target": 85
+    },
+    {
+      "tier": 2,
+      "name": "Specialist Human Agent",
+      "handler": "Customer Service Representative",
+      "capabilities": [
+        "Complex refund scenarios",
+        "Account issues",
+        "Payment disputes",
+        "Shipping complications",
+        "Custom requests"
+      ],
+      "response_time_target_minutes": 10,
+      "resolution_target_minutes": 30
+    },
+    {
+      "tier": 3,
+      "name": "Senior Supervisor",
+      "handler": "Senior Customer Service Manager",
+      "capabilities": [
+        "Policy exceptions",
+        "Large refund approvals",
+        "VIP customer issues",
+        "Loyalty compensation",
+        "Brand reputation concerns"
+      ],
+      "response_time_target_minutes": 30,
+      "resolution_target_minutes": 120
+    },
+    {
+      "tier": 4,
+      "name": "Executive Escalation",
+      "handler": "Director of Customer Experience",
+      "capabilities": [
+        "Legal threats",
+        "Social media crises",
+        "Major customer complaints",
+        "Regulatory concerns",
+        "High-value disputes"
+      ],
+      "response_time_target_hours": 4,
+      "resolution_target_hours": 24
+    }
+  ],
+  "automatic_escalation_triggers": [
+    {
+      "trigger_id": "ESC001",
+      "name": "high_value_refund",
+      "condition": {
+        "order_value_exceeds": 500.00,
+        "refund_type": "full_refund"
+      },
+      "escalate_to_tier": 2,
+      "reason": "Requires manager approval for high-value transactions",
+      "auto_escalate": true,
+      "notification": "Immediate"
+    },
+    {
+      "trigger_id": "ESC002",
+      "name": "legal_keywords_detected",
+      "condition": {
+        "keywords": ["lawyer", "attorney", "lawsuit", "legal action", "sue", "court", "BBB complaint"],
+        "keyword_match_threshold": 1
+      },
+      "escalate_to_tier": 4,
+      "reason": "Potential legal issue requires executive attention",
+      "auto_escalate": true,
+      "notification": "Immediate",
+      "flag": "urgent"
+    },
+    {
+      "trigger_id": "ESC003",
+      "name": "extreme_negative_sentiment",
+      "condition": {
+        "sentiment_score": "<= -0.8",
+        "angry_keywords": ["furious", "livid", "unacceptable", "disgusted", "worst"],
+        "consecutive_negative_messages": 3
+      },
+      "escalate_to_tier": 2,
+      "reason": "Customer highly upset, human empathy needed",
+      "auto_escalate": true,
+      "notification": "High priority"
+    },
+    {
+      "trigger_id": "ESC004",
+      "name": "vip_customer",
+      "condition": {
+        "customer_tier": ["VIP", "Premium"],
+        "issue_complexity": "medium_or_high"
+      },
+      "escalate_to_tier": 2,
+      "reason": "VIP customer deserves priority human attention",
+      "auto_escalate": false,
+      "offer_choice": true,
+      "message": "Would you like to speak with a senior representative?"
+    },
+    {
+      "trigger_id": "ESC005",
+      "name": "repeated_ai_failure",
+      "condition": {
+        "ai_resolution_attempts": 3,
+        "issue_unresolved": true
+      },
+      "escalate_to_tier": 2,
+      "reason": "AI unable to resolve after multiple attempts",
+      "auto_escalate": true,
+      "notification": "Standard",
+      "message": "Let me connect you with a specialist who can better assist you."
+    },
+    {
+      "trigger_id": "ESC006",
+      "name": "defective_product_high_frequency",
+      "condition": {
+        "issue_type": "defective_product",
+        "same_product_defect_reports": ">= 5",
+        "time_window_days": 7
+      },
+      "escalate_to_tier": 3,
+      "reason": "Quality control issue, potential product recall",
+      "auto_escalate": true,
+      "notification": "Immediate",
+      "additional_action": "Alert quality assurance team"
+    },
+    {
+      "trigger_id": "ESC007",
+      "name": "payment_fraud_suspected",
+      "condition": {
+        "keywords": ["fraud", "unauthorized charge", "didn't order", "stolen card"],
+        "refund_requested": true
+      },
+      "escalate_to_tier": 2,
+      "reason": "Potential fraud requires verification",
+      "auto_escalate": true,
+      "notification": "Immediate",
+      "additional_action": "Flag account for fraud review"
+    },
+    {
+      "trigger_id": "ESC008",
+      "name": "social_media_threat",
+      "condition": {
+        "keywords": ["twitter", "facebook", "instagram", "tiktok", "viral", "post about this", "expose"],
+        "negative_context": true
+      },
+      "escalate_to_tier": 3,
+      "reason": "Brand reputation risk",
+      "auto_escalate": true,
+      "notification": "Immediate",
+      "additional_action": "Alert social media team"
+    },
+    {
+      "trigger_id": "ESC009",
+      "name": "health_safety_concern",
+      "condition": {
+        "keywords": ["allergic reaction", "injury", "hurt", "hospital", "emergency", "rash", "sick"],
+        "product_related": true
+      },
+      "escalate_to_tier": 4,
+      "reason": "Product safety issue with potential liability",
+      "auto_escalate": true,
+      "notification": "Emergency",
+      "additional_action": "Alert legal and product safety teams"
+    },
+    {
+      "trigger_id": "ESC010",
+      "name": "missing_package_claim",
+      "condition": {
+        "issue_type": "package_not_received",
+        "delivery_confirmed": true,
+        "customer_claims_not_received": true
+      },
+      "escalate_to_tier": 2,
+      "reason": "Requires investigation and carrier coordination",
+      "auto_escalate": false,
+      "investigation_required": true
+    },
+    {
+      "trigger_id": "ESC011",
+      "name": "accessibility_assistance",
+      "condition": {
+        "keywords": ["disabled", "disability", "accessibility", "screen reader", "ADA", "can't see"],
+        "customer_needs_accommodation": true
+      },
+      "escalate_to_tier": 2,
+      "reason": "Requires specialized accessibility support",
+      "auto_escalate": false,
+      "offer_phone_support": true
+    },
+    {
+      "trigger_id": "ESC012",
+      "name": "language_barrier",
+      "condition": {
+        "customer_requests_language": "non_english",
+        "ai_translation_confidence": "< 0.7"
+      },
+      "escalate_to_tier": 2,
+      "reason": "Bilingual agent needed",
+      "auto_escalate": false,
+      "offer_language_options": true
+    }
+  ],
+  "manual_escalation_options": [
+    {
+      "option_id": "MANUAL001",
+      "trigger_phrase": "speak to manager",
+      "escalate_to_tier": 2,
+      "customer_initiated": true,
+      "response": "I understand you'd like to speak with a manager. Let me connect you right away."
+    },
+    {
+      "option_id": "MANUAL002",
+      "trigger_phrase": "human agent",
+      "escalate_to_tier": 2,
+      "customer_initiated": true,
+      "response": "Of course! I'll transfer you to one of our customer service representatives."
+    },
+    {
+      "option_id": "MANUAL003",
+      "trigger_phrase": "not helpful",
+      "escalate_to_tier": 2,
+      "customer_initiated": true,
+      "response": "I apologize I couldn't resolve this for you. Let me connect you with someone who can provide more assistance."
+    }
+  ],
+  "de_escalation_strategies": [
+    {
+      "strategy_id": "DE001",
+      "name": "immediate_compensation_offer",
+      "trigger": "Anger level high but issue resolvable",
+      "actions": [
+        "Offer 20% discount immediately",
+        "Expedite shipping at no cost",
+        "Provide direct phone number"
+      ],
+      "success_rate": 70
+    },
+    {
+      "strategy_id": "DE002",
+      "name": "empathy_and_ownership",
+      "trigger": "Customer frustrated but not hostile",
+      "actions": [
+        "Acknowledge mistake explicitly",
+        "Take personal ownership",
+        "Provide timeline with specific resolution",
+        "Offer status updates"
+      ],
+      "success_rate": 65
+    },
+    {
+      "strategy_id": "DE003",
+      "name": "instant_resolution",
+      "trigger": "Simple fixable issue",
+      "actions": [
+        "Resolve immediately without bureaucracy",
+        "Waive all fees",
+        "Add bonus gesture (store credit)"
+      ],
+      "success_rate": 85
+    }
+  ],
+  "escalation_handoff_protocol": {
+    "information_transfer": [
+      "Full conversation history",
+      "Customer account details",
+      "Order information",
+      "Previous interactions",
+      "Sentiment analysis",
+      "Attempted resolutions"
+    ],
+    "context_summary": "AI generates 2-3 sentence summary for human agent",
+    "priority_flag": "Set based on urgency and customer tier",
+    "suggested_actions": "AI provides recommended resolution path",
+    "warm_transfer": true,
+    "customer_notification": "You're being connected to {agent_name} who specializes in {issue_type}."
+  },
+  "post_escalation_tracking": {
+    "metrics_collected": [
+      "Time to resolution",
+      "Customer satisfaction score",
+      "Issue resolution method",
+      "Compensation provided",
+      "Customer retention"
+    ],
+    "feedback_loop": "Human resolution patterns fed back to AI for learning",
+    "escalation_rate_target": "< 15%",
+    "resolution_rate_target": "> 95%"
+  },
+  "emergency_escalation": {
+    "24_7_emergency_line": "1-800-EMERGENCY",
+    "triggers": [
+      "Product injury",
+      "Safety hazard",
+      "Security breach",
+      "Data privacy concern"
+    ],
+    "response_protocol": "Immediate executive notification",
+    "documentation_required": true
+  }
+}

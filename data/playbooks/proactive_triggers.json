@@ -1,0 +1,65 @@
+{
+  "triggers": [
+    {
+      "trigger_id": "TR001",
+      "name": "post_delivery_check",
+      "type": "time_based",
+      "conditions": {
+        "hours_after_delivery": 24
+      },
+      "message_template": "Hi {customer_name}! Your {product_name} was delivered yesterday. How is everything? If you have any questions or concerns, I'm here to help!",
+      "agent": "monitor_agent",
+      "priority": "medium"
+    },
+    {
+      "trigger_id": "TR002",
+      "name": "shipping_delay_detected",
+      "type": "event_based",
+      "conditions": {
+        "expected_delivery_missed": true,
+        "delay_days": 2
+      },
+      "message_template": "I noticed your order is running late. The current status is '{tracking_status}'. I'm actively monitoring this and will keep you updated. Would you like me to look into expediting a replacement?",
+      "agent": "monitor_agent",
+      "priority": "high"
+    },
+    {
+      "trigger_id": "TR003",
+      "name": "high_return_rate_product",
+      "type": "pattern_based",
+      "conditions": {
+        "product_return_rate": ">20%",
+        "common_reason": "size_mismatch"
+      },
+      "message_template": "Hi {customer_name}! I see you ordered the {product_name}. This item runs {size_tendency}. Your order history shows you typically wear {customer_size_pattern}. Just want to make sure the {ordered_size} will be perfect for you!",
+      "agent": "monitor_agent",
+      "timing": "before_shipment",
+      "priority": "high"
+    },
+    {
+      "trigger_id": "TR004",
+      "name": "first_time_customer",
+      "type": "customer_segment",
+      "conditions": {
+        "order_count": 1,
+        "days_since_order": 3
+      },
+      "message_template": "Welcome to our community, {customer_name}! Your {product_name} should arrive soon. If you have any questions about sizing, care instructions, or our return policy, I'm here to help!",
+      "agent": "controller_agent",
+      "priority": "low"
+    },
+    {
+      "trigger_id": "TR005",
+      "name": "weather_sensitive_product",
+      "type": "external_data",
+      "conditions": {
+        "product_category": "Outdoor Gear",
+        "delivery_weather": "adverse",
+        "delivery_location": "{customer_zip}"
+      },
+      "message_template": "Your {product_name} is scheduled for delivery during {weather_condition}. The package is weather-protected, but please bring it inside quickly once it arrives!",
+      "agent": "monitor_agent",
+      "priority": "medium"
+    }
+  ]
+}

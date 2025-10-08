@@ -1,0 +1,48 @@
+{
+  "policy_name": "Exchange Policy",
+  "last_updated": "2025-10-07",
+  "general_rules": {
+    "exchange_window_days": 45,
+    "allowed_exchanges": ["Size", "Color", "Style within same category"],
+    "price_difference_handling": "Customer pays difference or receives store credit"
+  },
+  "exchange_types": [
+    {
+      "type": "size_exchange",
+      "priority": "high",
+      "free_shipping": true,
+      "processing_time_days": 3,
+      "conditions": ["Same product", "Different size", "In stock"]
+    },
+    {
+      "type": "color_exchange",
+      "priority": "high",
+      "free_shipping": true,
+      "processing_time_days": 3,
+      "conditions": ["Same product", "Different color", "In stock"]
+    },
+    {
+      "type": "product_exchange",
+      "priority": "medium",
+      "free_shipping": false,
+      "processing_time_days": 5,
+      "conditions": ["Similar price range", "In stock", "Same category"]
+    }
+  ],
+  "instant_exchange_criteria": {
+    "customer_tier": ["Premium", "VIP"],
+    "order_history_minimum": 3,
+    "account_age_months": 6,
+    "benefits": ["Ship new item before return received", "Free shipping both ways"]
+  },
+  "smart_exchange_recommendations": {
+    "enabled": true,
+    "recommendation_factors": [
+      "Purchase history",
+      "Size patterns",
+      "Style preferences",
+      "Similar customer purchases",
+      "Current inventory"
+    ]
+  }
+}

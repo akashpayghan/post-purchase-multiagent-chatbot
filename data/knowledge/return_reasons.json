@@ -1,0 +1,64 @@
+{
+  "return_reasons": [
+    {
+      "id": "RR001",
+      "reason": "Size too small",
+      "category": "Sizing",
+      "description": "The product was smaller than expected or usual and does not fit properly."
+    },
+    {
+      "id": "RR002",
+      "reason": "Size too large",
+      "category": "Sizing",
+      "description": "The product was larger than expected or usual and does not fit properly."
+    },
+    {
+      "id": "RR003",
+      "reason": "Wrong item received",
+      "category": "Order Accuracy",
+      "description": "The item received is not the item ordered."
+    },
+    {
+      "id": "RR004",
+      "reason": "Product defective or damaged",
+      "category": "Quality",
+      "description": "The product was damaged or defective upon arrival."
+    },
+    {
+      "id": "RR005",
+      "reason": "Not as described",
+      "category": "Product Description",
+      "description": "The product does not match the description or images shown during purchase."
+    },
+    {
+      "id": "RR006",
+      "reason": "Changed mind",
+      "category": "Customer Preference",
+      "description": "The customer no longer wants the product."
+    },
+    {
+      "id": "RR007",
+      "reason": "Late delivery",
+      "category": "Shipping",
+      "description": "The product arrived later than the promised or expected delivery date."
+    },
+    {
+      "id": "RR008",
+      "reason": "Poor quality",
+      "category": "Quality",
+      "description": "The product quality does not meet the customer's expectations."
+    },
+    {
+      "id": "RR009",
+      "reason": "Missing parts or accessories",
+      "category": "Completeness",
+      "description": "The product was missing parts or accessories included in the package."
+    },
+    {
+      "id": "RR010",
+      "reason": "Arrived too late",
+      "category": "Shipping",
+      "description": "Delivery occurred after needed date."
+    }
+  ]
+}

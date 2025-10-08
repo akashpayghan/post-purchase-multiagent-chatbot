@@ -1,0 +1,171 @@
+/* Smart Post-Purchase AI Guardian - Custom Styles */
+
+/* Force light text on dark background */
+* {
+    color: #FFFFFF !important;
+}
+
+/* Main container */
+.main {
+    background-color: #0E1117;
+    padding: 2rem;
+}
+
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    background-color: #262730;
+}
+
+section[data-testid="stSidebar"] * {
+    color: #FFFFFF !important;
+}
+
+/* Headers */
+h1, h2, h3, h4, h5, h6 {
+    color: #FFFFFF !important;
+    font-weight: 600;
+}
+
+/* Text and paragraphs */
+p, span, div, label {
+    color: #FFFFFF !important;
+}
+
+/* Chat messages */
+.stChatMessage {
+    background-color: #1E1E1E;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.stChatMessage * {
+    color: #FFFFFF !important;
+}
+
+/* Buttons */
+.stButton > button {
+    background-color: #FF4B4B;
+    color: white !important;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.stButton > button:hover {
+    background-color: #FF6B6B;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 75, 75, 0.3);
+}
+
+/* Input fields */
+.stTextInput > div > div > input,
+.stTextArea > div > div > textarea {
+    background-color: #262730 !important;
+    color: #FFFFFF !important;
+    border: 1px solid #4A4A4A !important;
+    border-radius: 8px;
+}
+
+.stTextInput > label,
+.stTextArea > label {
+    color: #FFFFFF !important;
+}
+
+/* Radio buttons */
+.stRadio > label {
+    color: #FFFFFF !important;
+    font-weight: 500;
+}
+
+.stRadio > div {
+    color: #FFFFFF !important;
+}
+
+.stRadio label[data-baseweb="radio"] {
+    color: #FFFFFF !important;
+}
+
+/* Alert boxes */
+.stSuccess {
+    background-color: #1B5E20 !important;
+    color: #FFFFFF !important;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.stError {
+    background-color: #B71C1C !important;
+    color: #FFFFFF !important;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.stInfo {
+    background-color: #0D47A1 !important;
+    color: #FFFFFF !important;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.stWarning {
+    background-color: #E65100 !important;
+    color: #FFFFFF !important;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+/* Expander */
+.streamlit-expanderHeader {
+    background-color: #262730 !important;
+    color: #FFFFFF !important;
+    border-radius: 8px;
+}
+
+/* Metrics */
+.stMetric {
+    background-color: #1E1E1E;
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.stMetric label {
+    color: #AAAAAA !important;
+}
+
+.stMetric [data-testid="stMetricValue"] {
+    color: #FFFFFF !important;
+}
+
+/* Chat input */
+.stChatInput {
+    border-radius: 24px;
+}
+
+.stChatInput textarea {
+    background-color: #262730 !important;
+    color: #FFFFFF !important;
+    border: 1px solid #4A4A4A !important;
+}
+
+/* Divider */
+hr {
+    border-color: #4A4A4A !important;
+}
+
+/* Code blocks */
+code {
+    background-color: #262730 !important;
+    color: #FF4B4B !important;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+}
+
+pre {
+    background-color: #1E1E1E !important;
+    color: #FFFFFF !important;
+    padding: 1rem;
+    border-radius: 8px;
+}

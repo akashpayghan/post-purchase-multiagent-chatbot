@@ -1,0 +1,57 @@
+app:
+  name: "Smart Post-Purchase AI Guardian"
+  version: "1.0.0"
+  debug: true
+
+agents:
+  controller:
+    model: "gpt-4o"
+    temperature: 0.5
+    max_tokens: 1500
+  
+  monitor:
+    model: "gpt-4o-mini"
+    temperature: 0.3
+    check_interval_hours: 24
+  
+  visual:
+    model: "gemini-1.5-pro"
+    max_image_size_mb: 5
+    supported_formats: ["jpg", "jpeg", "png", "webp"]
+  
+  exchange:
+    model: "gpt-4o"
+    recommendation_count: 5
+    similarity_threshold: 0.75
+  
+  resolution:
+    model: "gpt-4o-mini"
+    auto_approve_limit_usd: 50
+
+database:
+  pinecone:
+    dimension: 1536
+    metric: "cosine"
+    pods: 1
+  
+  supabase:
+    tables:
+      - conversations
+      - orders
+      - resolutions
+      - analytics
+
+embeddings:
+  model: "text-embedding-3-small"
+  batch_size: 100
+  chunk_size: 1000
+  chunk_overlap: 200
+
+orchestration:
+  max_iterations: 10
+  timeout_seconds: 30
+  enable_human_handoff: true
+  handoff_triggers:
+    - "legal"
+    - "lawsuit"
+    - "extreme_anger"

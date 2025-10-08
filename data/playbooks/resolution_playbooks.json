@@ -1,0 +1,129 @@
+{
+  "playbooks": [
+    {
+      "playbook_id": "PB001",
+      "issue_type": "size_too_small",
+      "severity": "medium",
+      "steps": [
+        {
+          "step": 1,
+          "action": "acknowledge_issue",
+          "message_template": "I understand the {product_name} is too small. Let me help you find the perfect fit."
+        },
+        {
+          "step": 2,
+          "action": "check_stock",
+          "conditions": ["Check if next size up is in stock", "Check customer's size history"]
+        },
+        {
+          "step": 3,
+          "action": "offer_solution",
+          "options": [
+            {
+              "priority": 1,
+              "solution": "instant_exchange",
+              "conditions": ["Next size in stock", "Customer tier >= Regular"],
+              "message": "I can send you size {next_size} right away with free shipping. You'll receive it in 3-5 days."
+            },
+            {
+              "priority": 2,
+              "solution": "alternative_product",
+              "conditions": ["Next size out of stock"],
+              "message": "The next size is currently out of stock, but I found {alternative_count} similar products that might fit perfectly."
+            },
+            {
+              "priority": 3,
+              "solution": "full_refund",
+              "message": "I can process a full refund to your original payment method."
+            }
+          ]
+        }
+      ],
+      "success_metrics": {
+        "exchange_rate_target": 75,
+        "customer_satisfaction_target": 4.5
+      }
+    },
+    {
+      "playbook_id": "PB002",
+      "issue_type": "defective_product",
+      "severity": "high",
+      "steps": [
+        {
+          "step": 1,
+          "action": "apologize_empathize",
+          "message_template": "I'm so sorry to hear your {product_name} arrived defective. This isn't the experience we want for you."
+        },
+        {
+          "step": 2,
+          "action": "request_visual_proof",
+          "message": "Could you please upload a photo of the defect? This helps us improve quality control."
+        },
+        {
+          "step": 3,
+          "action": "analyze_image",
+          "agent": "visual_agent",
+          "validation": ["Verify defect authenticity", "Assess severity"]
+        },
+        {
+          "step": 4,
+          "action": "immediate_resolution",
+          "options": [
+            {
+              "priority": 1,
+              "solution": "instant_replacement",
+              "benefits": ["Ship immediately", "Free express shipping", "Keep defective item", "10% discount on next purchase"],
+              "message": "I'm sending a replacement right away with express shipping. You'll have it in 1-2 days. No need to return the defective item."
+            }
+          ]
+        }
+      ],
+      "escalation": {
+        "conditions": ["High-value item", "Customer very upset", "Quality control concern"],
+        "action": "notify_quality_team"
+      }
+    },
+    {
+      "playbook_id": "PB003",
+      "issue_type": "delivery_delay",
+      "severity": "medium",
+      "steps": [
+        {
+          "step": 1,
+          "action": "check_tracking",
+          "data_source": "monitor_agent"
+        },
+        {
+          "step": 2,
+          "action": "assess_delay_severity",
+          "thresholds": {
+            "minor_delay": "1-3 days",
+            "major_delay": "4-7 days",
+            "severe_delay": ">7 days"
+          }
+        },
+        {
+          "step": 3,
+          "action": "offer_compensation",
+          "options": [
+            {
+              "delay_type": "minor_delay",
+              "solution": "5% discount code",
+              "message": "Your order is running slightly behind. Here's a 5% discount for your next purchase."
+            },
+            {
+              "delay_type": "major_delay",
+              "solution": "15% refund + free shipping next order",
+              "message": "I apologize for the significant delay. I'm applying a 15% refund and free shipping on your next order."
+            },
+            {
+              "delay_type": "severe_delay",
+              "solution": "full_refund or replacement",
+              "message": "This delay is unacceptable. I can either send a replacement with express shipping or issue a full refund immediately."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

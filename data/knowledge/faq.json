@@ -1,0 +1,34 @@
+{
+  "faqs": [
+    {
+      "question": "How long does shipping take?",
+      "answer": "Standard shipping takes 5-7 business days. Express shipping (1-2 days) and Priority shipping (3-4 days) are available at checkout.",
+      "category": "shipping",
+      "keywords": ["shipping", "delivery", "how long", "tracking"]
+    },
+    {
+      "question": "What is your return policy?",
+      "answer": "We accept returns within 30 days of delivery. Items must be unused, unworn, and in original packaging with tags attached. Refunds are processed within 5-7 business days.",
+      "category": "returns",
+      "keywords": ["return", "refund", "policy", "exchange"]
+    },
+    {
+      "question": "How do I exchange for a different size?",
+      "answer": "Size exchanges are easy! Just tell me which size you need, and I'll arrange free shipping for the exchange. The new item ships within 3 business days.",
+      "category": "exchanges",
+      "keywords": ["exchange", "size", "different size", "swap"]
+    },
+    {
+      "question": "Can I cancel my order?",
+      "answer": "Orders can be cancelled within 2 hours of placement. After that, the order enters processing. Contact me immediately if you need to cancel.",
+      "category": "orders",
+      "keywords": ["cancel", "cancellation", "stop order"]
+    },
+    {
+      "question": "Do you offer store credit?",
+      "answer": "Yes! Store credit refunds are instant and include a 10% bonus. For example, a $50 return becomes $55 in store credit.",
+      "category": "refunds",
+      "keywords": ["store credit", "credit", "bonus"]
+    }
+  ]
+}
