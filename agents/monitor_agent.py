@@ -1,414 +1,399 @@
 """
-Monitor Agent - Order Tracking & Issue Detection
-Handles order status, shipping tracking, delivery updates, and proactive issue detection
+Monitor Agent - Order Tracking & Proactive Issue Detection (Production-Ready)
+Handles order status, tracking, delivery monitoring, and proactive alerts
 """
 
-import os
-import json
+import asyncio
+import logging
 from typing import Dict, List, Any, Optional
 from datetime import datetime, timedelta
-from openai import OpenAI
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from openai import AsyncOpenAI, APIError, APITimeoutError
+import random
+import json
+
+logger = logging.getLogger(__name__)
 
 class MonitorAgent:
     """
-    Specialist agent for order monitoring, tracking, and proactive issue detection.
-    Simulates tracking systems and detects potential problems before customers complain.
+    Monitor Agent for order tracking, shipping status, and proactive issue detection.
+    Production-ready with async operations, retry logic, and health monitoring.
     """
     
     def __init__(self, config: Dict[str, Any]):
-        """
-        Initialize the Monitor Agent
-        
-        Args:
-            config: Configuration dictionary with API keys and settings
-        """
-        self.client = OpenAI(api_key=config.get('openai_api_key'))
+        """Initialize Monitor Agent"""
+        self.client = AsyncOpenAI(
+            api_key=config.get('openai_api_key'),
+            timeout=config.get('timeout', 30.0),
+            max_retries=0
+        )
         self.model = config.get('monitor_model', 'gpt-4o-mini')
         self.temperature = config.get('monitor_temperature', 0.3)
+        self.request_timeout = config.get('request_timeout', 20.0)
         
-        # Load policies and triggers
-        self.shipping_policy = self._load_shipping_policy()
+        # Load proactive triggers
         self.proactive_triggers = self._load_proactive_triggers()
         
-    def _load_shipping_policy(self) -> Dict:
-        """Load shipping policy"""
-        try:
-            with open('data/policies/shipping_policy.json', 'r') as f:
-                return json.load(f)
-        except FileNotFoundError:
-            return {}
+        # Health status
+        self._healthy = True
+        self._last_health_check = None
+        
+        logger.info(f"MonitorAgent initialized with model={self.model}")
     
     def _load_proactive_triggers(self) -> Dict:
-        """Load proactive trigger rules"""
+        """Load proactive monitoring triggers"""
         try:
             with open('data/playbooks/proactive_triggers.json', 'r') as f:
                 return json.load(f)
         except FileNotFoundError:
+            logger.warning("Proactive triggers file not found, using defaults")
+            return {}
+        except Exception as e:
+            logger.error(f"Error loading proactive triggers: {e}")
             return {}
     
-    def check_order_status(self, order_id: str, context: Dict[str, Any] = None) -> Dict[str, Any]:
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        retry=retry_if_exception_type((APIError, APITimeoutError, asyncio.TimeoutError))
+    )
+    async def check_order_status(
+        self, 
+        order_id: str, 
+        context: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
         """
-        Check order status and provide detailed tracking information
+        Check order status and detect issues proactively
         
         Args:
             order_id: Order identifier
-            context: Additional context (customer info, etc.)
+            context: Additional context
             
         Returns:
-            Dictionary with order status and tracking details
+            Order status with tracking info and detected issues
         """
-        # In production, this would query real tracking API
-        # For demo, simulate tracking data
+        start_time = datetime.now()
+        context = context or {}
         
-        tracking_data = self._simulate_tracking_data(order_id, context)
-        
-        # Analyze for issues
-        issues_detected = self._detect_tracking_issues(tracking_data)
-        
-        # Generate human-readable status
-        status_message = self._generate_status_message(tracking_data, issues_detected)
-        
-        return {
-            'order_id': order_id,
-            'tracking_data': tracking_data,
-            'issues_detected': issues_detected,
-            'status_message': status_message,
-            'proactive_actions': self._suggest_proactive_actions(issues_detected)
-        }
+        try:
+            # Simulate fetching tracking data (replace with real API in production)
+            tracking_data = await self._fetch_tracking_data(order_id, context)
+            
+            # Detect issues proactively
+            issues = await self._detect_tracking_issues(tracking_data)
+            
+            # Generate customer-friendly status message
+            status_message = await self._generate_status_message(tracking_data, issues)
+            
+            elapsed = (datetime.now() - start_time).total_seconds()
+            
+            logger.info(f"Order status checked: {order_id}, issues: {len(issues)}, elapsed: {elapsed:.2f}s")
+            
+            return {
+                'success': True,
+                'order_id': order_id,
+                'tracking_data': tracking_data,
+                'issues_detected': issues,
+                'status_message': status_message,
+                'latency_ms': elapsed * 1000
+            }
+            
+        except Exception as e:
+            logger.error(f"Error checking order status for {order_id}: {e}", exc_info=True)
+            self._healthy = False
+            
+            return {
+                'success': False,
+                'order_id': order_id,
+                'error': str(e),
+                'status_message': f"I'm having trouble accessing the tracking information for order #{order_id}. Please try again in a moment."
+            }
     
-    def _simulate_tracking_data(self, order_id: str, context: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def _fetch_tracking_data(self, order_id: str, context: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Simulate tracking data (replace with real API in production)
+        Fetch tracking data from carrier/shipping system
         
-        Args:
-            order_id: Order ID
-            context: Optional context
-            
-        Returns:
-            Simulated tracking data
+        In production, replace with actual API calls to:
+        - Shopify/WooCommerce order API
+        - Carrier APIs (USPS, FedEx, UPS, DHL)
+        - Internal warehouse management system
         """
-        # Demo data - in production, call real carrier API
-        import random
+        # Simulate API delay
+        await asyncio.sleep(random.uniform(0.1, 0.3))
         
-        statuses = [
-            'order_placed',
-            'processing',
-            'shipped',
-            'in_transit',
-            'out_for_delivery',
-            'delivered',
-            'delivery_attempted',
-            'delayed'
-        ]
+        # Simulate tracking data (replace with real API)
+        return self._simulate_tracking_data(order_id, context)
+    
+    def _simulate_tracking_data(self, order_id: str, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate simulated tracking data for demo purposes"""
         
-        current_status = context.get('order_status', random.choice(statuses[:4]))
+        statuses = ['pending', 'processing', 'shipped', 'in_transit', 'out_for_delivery', 
+                   'delivered', 'delayed', 'delivery_attempted']
         
-        shipped_date = datetime.now() - timedelta(days=random.randint(1, 5))
-        expected_delivery = shipped_date + timedelta(days=random.randint(5, 7))
+        current_status = random.choice(statuses[2:7])  # More likely to be shipped/in transit
+        
+        order_date = datetime.now() - timedelta(days=random.randint(1, 5))
+        shipped_date = order_date + timedelta(days=1) if current_status != 'pending' else None
+        expected_delivery = datetime.now() + timedelta(days=random.randint(1, 3))
+        
+        carriers = ['USPS', 'FedEx', 'UPS', 'DHL']
+        carrier = random.choice(carriers)
+        
+        tracking_number = f"{carrier[:3].upper()}{random.randint(1000000000000, 9999999999999)}"
+        
+        # Generate tracking events
+        events = []
+        if current_status in ['shipped', 'in_transit', 'out_for_delivery', 'delivered']:
+            events.append({
+                'timestamp': (order_date + timedelta(days=1)).isoformat(),
+                'status': 'Picked up by carrier',
+                'location': 'Origin Facility'
+            })
+            events.append({
+                'timestamp': (order_date + timedelta(days=2)).isoformat(),
+                'status': 'In transit',
+                'location': 'Sorting Facility'
+            })
+            if current_status in ['out_for_delivery', 'delivered']:
+                events.append({
+                    'timestamp': datetime.now().isoformat(),
+                    'status': 'At local facility',
+                    'location': 'Local Distribution Center'
+                })
         
         return {
             'order_id': order_id,
             'current_status': current_status,
-            'tracking_number': f'TRK{order_id[-6:]}',
-            'carrier': random.choice(['USPS', 'UPS', 'FedEx']),
-            'shipped_date': shipped_date.isoformat(),
+            'carrier': carrier,
+            'tracking_number': tracking_number,
+            'order_date': order_date.isoformat(),
+            'shipped_at': shipped_date.isoformat() if shipped_date else None,
             'expected_delivery': expected_delivery.isoformat(),
-            'current_location': random.choice([
-                'Distribution Center - Chicago, IL',
-                'In Transit to Local Facility',
-                'Local Distribution Center',
-                'Out for Delivery'
-            ]),
-            'tracking_events': [
-                {
-                    'timestamp': (shipped_date + timedelta(hours=2)).isoformat(),
-                    'location': 'Warehouse',
-                    'status': 'Shipment picked up'
-                },
-                {
-                    'timestamp': (shipped_date + timedelta(days=1)).isoformat(),
-                    'location': 'Distribution Hub',
-                    'status': 'Arrived at facility'
-                },
-                {
-                    'timestamp': (shipped_date + timedelta(days=2)).isoformat(),
-                    'location': 'In Transit',
-                    'status': 'Package in transit'
-                }
-            ],
-            'delays': random.choice([None, {'reason': 'Weather delay', 'estimated_delay_days': 2}])
+            'current_location': 'Local Distribution Center' if current_status == 'in_transit' else None,
+            'tracking_events': events,
+            'delivery_instructions': context.get('delivery_instructions'),
+            'customer_email': context.get('customer_email')
         }
     
-    def _detect_tracking_issues(self, tracking_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def _detect_tracking_issues(self, tracking_data: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
-        Detect potential issues from tracking data
+        Proactively detect issues with order/delivery
         
         Args:
             tracking_data: Tracking information
             
         Returns:
-            List of detected issues
+            List of detected issues with severity and recommended actions
         """
         issues = []
+        current_status = tracking_data.get('current_status')
         
-        # Check for delays
-        expected_delivery = datetime.fromisoformat(tracking_data['expected_delivery'])
-        today = datetime.now()
-        
-        if expected_delivery < today and tracking_data['current_status'] != 'delivered':
+        # Check for delivery delays
+        if current_status == 'delayed':
             issues.append({
                 'type': 'delivery_delay',
-                'severity': 'high',
-                'description': f"Package is {(today - expected_delivery).days} days past expected delivery",
-                'action_required': True
+                'severity': 'medium',
+                'message': 'Your order is experiencing a delay.',
+                'action': 'offer_compensation',
+                'compensation_amount': 10.00
             })
-        
-        # Check for stuck package
-        last_update = tracking_data['tracking_events'][-1] if tracking_data['tracking_events'] else None
-        if last_update:
-            last_update_time = datetime.fromisoformat(last_update['timestamp'])
-            hours_since_update = (today - last_update_time).total_seconds() / 3600
-            
-            if hours_since_update > 48:  # No update in 48 hours
-                issues.append({
-                    'type': 'tracking_stale',
-                    'severity': 'medium',
-                    'description': f"No tracking update in {int(hours_since_update)} hours",
-                    'action_required': True
-                })
         
         # Check for delivery attempts
-        if tracking_data['current_status'] == 'delivery_attempted':
+        if current_status == 'delivery_attempted':
             issues.append({
                 'type': 'delivery_attempted',
-                'severity': 'medium',
-                'description': "Delivery was attempted but customer was not available",
-                'action_required': True
+                'severity': 'high',
+                'message': 'Delivery was attempted but unsuccessful.',
+                'action': 'provide_redelivery_options',
+                'requires_customer_action': True
             })
         
-        # Check for weather delays
-        if tracking_data.get('delays'):
+        # Check for stuck packages
+        expected_delivery = datetime.fromisoformat(tracking_data.get('expected_delivery'))
+        if datetime.now() > expected_delivery and current_status not in ['delivered', 'out_for_delivery']:
             issues.append({
-                'type': 'weather_delay',
-                'severity': 'low',
-                'description': tracking_data['delays']['reason'],
-                'action_required': False
+                'type': 'package_stuck',
+                'severity': 'high',
+                'message': 'Your package appears to be delayed beyond the expected delivery date.',
+                'action': 'proactive_investigation',
+                'days_overdue': (datetime.now() - expected_delivery).days
             })
+        
+        # Check for missing tracking updates
+        events = tracking_data.get('tracking_events', [])
+        if events:
+            last_event_time = datetime.fromisoformat(events[-1]['timestamp'])
+            hours_since_update = (datetime.now() - last_event_time).total_seconds() / 3600
+            
+            if hours_since_update > 48 and current_status not in ['delivered']:
+                issues.append({
+                    'type': 'no_tracking_updates',
+                    'severity': 'medium',
+                    'message': 'No tracking updates in 48+ hours.',
+                    'action': 'carrier_inquiry',
+                    'hours_since_update': int(hours_since_update)
+                })
         
         return issues
     
-    def _generate_status_message(self, tracking_data: Dict[str, Any], 
-                                 issues: List[Dict[str, Any]]) -> str:
+    @retry(
+        stop=stop_after_attempt(2),
+        wait=wait_exponential(multiplier=1, min=1, max=5)
+    )
+    async def _generate_status_message(
+        self, 
+        tracking_data: Dict[str, Any], 
+        issues: List[Dict[str, Any]]
+    ) -> str:
         """
-        Generate human-readable status message
+        Generate customer-friendly status message using LLM
         
         Args:
             tracking_data: Tracking information
             issues: Detected issues
             
         Returns:
-            Status message string
+            Formatted status message
         """
-        status = tracking_data['current_status']
-        carrier = tracking_data['carrier']
-        expected_delivery = datetime.fromisoformat(tracking_data['expected_delivery']).strftime('%B %d')
-        location = tracking_data['current_location']
+        try:
+            # Build prompt
+            prompt = self._build_status_prompt(tracking_data, issues)
+            
+            # Generate message
+            response = await asyncio.wait_for(
+                self.client.chat.completions.create(
+                    model=self.model,
+                    temperature=self.temperature,
+                    max_tokens=500,
+                    messages=[
+                        {"role": "system", "content": self._get_system_prompt()},
+                        {"role": "user", "content": prompt}
+                    ]
+                ),
+                timeout=self.request_timeout
+            )
+            
+            return response.choices[0].message.content
+            
+        except Exception as e:
+            logger.error(f"Error generating status message: {e}")
+            # Fallback to template-based message
+            return self._fallback_status_message(tracking_data, issues)
+    
+    def _get_system_prompt(self) -> str:
+        """System prompt for status message generation"""
+        return """You are a helpful e-commerce order tracking assistant.
+
+Generate clear, friendly, and informative order status messages.
+
+Guidelines:
+- Start with the current status (e.g., "Your order is in transit!")
+- Include tracking number and carrier
+- Provide expected delivery date
+- If there are issues, acknowledge them with empathy and provide solutions
+- Keep the tone positive and reassuring
+- Use emojis sparingly (📦, 🚚, ✅)
+- Include next steps or actions the customer should take
+- Format with clear sections and bullet points for easy reading"""
+    
+    def _build_status_prompt(self, tracking_data: Dict[str, Any], issues: List[Dict[str, Any]]) -> str:
+        """Build prompt for status message generation"""
         
-        # Build message based on status
-        if status == 'delivered':
-            message = f"✅ Great news! Your package was delivered."
-        elif status == 'out_for_delivery':
-            message = f"📦 Your package is out for delivery today with {carrier}!"
-        elif status == 'in_transit':
-            message = f"📦 Your package is in transit. Current location: {location}. Expected delivery: {expected_delivery}."
-        elif status == 'shipped':
-            message = f"📦 Your package has shipped via {carrier}. Expected delivery: {expected_delivery}."
-        elif status == 'processing':
-            message = f"⏳ Your order is being processed and will ship soon."
-        else:
-            message = f"📦 Order status: {status.replace('_', ' ').title()}"
+        prompt_parts = [
+            "=== ORDER TRACKING DATA ===",
+            f"Order ID: {tracking_data.get('order_id')}",
+            f"Status: {tracking_data.get('current_status')}",
+            f"Carrier: {tracking_data.get('carrier')}",
+            f"Tracking Number: {tracking_data.get('tracking_number')}",
+            f"Expected Delivery: {tracking_data.get('expected_delivery')}",
+        ]
         
-        # Add issue warnings
+        if tracking_data.get('current_location'):
+            prompt_parts.append(f"Current Location: {tracking_data['current_location']}")
+        
         if issues:
-            high_severity_issues = [i for i in issues if i['severity'] == 'high']
-            if high_severity_issues:
-                message += f"\n\n⚠️ {high_severity_issues[0]['description']}"
+            prompt_parts.append("\n=== ISSUES DETECTED ===")
+            for issue in issues:
+                prompt_parts.append(f"- {issue['type']}: {issue['message']} (Severity: {issue['severity']})")
         
-        return message
+        prompt_parts.append("\n=== TASK ===")
+        prompt_parts.append("Generate a customer-friendly order status message that:")
+        prompt_parts.append("1. Clearly communicates the current status")
+        prompt_parts.append("2. Addresses any issues with empathy")
+        prompt_parts.append("3. Provides actionable next steps")
+        prompt_parts.append("4. Maintains a positive, helpful tone")
+        
+        return "\n".join(prompt_parts)
     
-    def _suggest_proactive_actions(self, issues: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """
-        Suggest proactive actions based on detected issues
+    def _fallback_status_message(self, tracking_data: Dict[str, Any], issues: List[Dict[str, Any]]) -> str:
+        """Generate fallback status message without LLM"""
         
-        Args:
-            issues: List of detected issues
-            
-        Returns:
-            List of suggested actions
-        """
-        actions = []
+        order_id = tracking_data.get('order_id')
+        status = tracking_data.get('current_status', 'unknown')
+        carrier = tracking_data.get('carrier', 'carrier')
+        tracking_number = tracking_data.get('tracking_number', 'N/A')
+        expected_delivery = tracking_data.get('expected_delivery', 'soon')
         
-        for issue in issues:
-            if issue['type'] == 'delivery_delay':
-                actions.append({
-                    'action': 'offer_compensation',
-                    'type': 'discount_code',
-                    'value': '15% off next order',
-                    'message': "I'd like to offer you 15% off your next order for this delay."
-                })
-                actions.append({
-                    'action': 'offer_refund',
-                    'type': 'shipping_refund',
-                    'message': "I can also refund your shipping cost immediately."
-                })
-            
-            elif issue['type'] == 'delivery_attempted':
-                actions.append({
-                    'action': 'reschedule_delivery',
-                    'message': "Would you like me to reschedule delivery or have it held at a pickup location?"
-                })
-            
-            elif issue['type'] == 'tracking_stale':
-                actions.append({
-                    'action': 'investigate',
-                    'message': "Let me file a tracking investigation with the carrier to locate your package."
-                })
-        
-        return actions
-    
-    def evaluate_proactive_trigger(self, order_data: Dict[str, Any], 
-                                  customer_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """
-        Evaluate if proactive outreach should be triggered
-        
-        Args:
-            order_data: Order information
-            customer_data: Customer information
-            
-        Returns:
-            Trigger data if should reach out, None otherwise
-        """
-        triggers = self.proactive_triggers.get('triggers', [])
-        
-        for trigger in triggers:
-            if self._evaluate_trigger_conditions(trigger, order_data, customer_data):
-                return {
-                    'trigger_id': trigger['trigger_id'],
-                    'trigger_name': trigger['name'],
-                    'message': self._format_trigger_message(
-                        trigger['message_template'],
-                        order_data,
-                        customer_data
-                    ),
-                    'priority': trigger['priority']
-                }
-        
-        return None
-    
-    def _evaluate_trigger_conditions(self, trigger: Dict[str, Any],
-                                    order_data: Dict[str, Any],
-                                    customer_data: Dict[str, Any]) -> bool:
-        """
-        Evaluate if trigger conditions are met
-        
-        Args:
-            trigger: Trigger configuration
-            order_data: Order data
-            customer_data: Customer data
-            
-        Returns:
-            True if conditions met, False otherwise
-        """
-        conditions = trigger.get('conditions', {})
-        
-        # Time-based triggers
-        if 'hours_after_delivery' in conditions:
-            if order_data.get('status') == 'delivered':
-                delivered_time = datetime.fromisoformat(order_data.get('delivered_at', datetime.now().isoformat()))
-                hours_elapsed = (datetime.now() - delivered_time).total_seconds() / 3600
-                if hours_elapsed >= conditions['hours_after_delivery']:
-                    return True
-        
-        # Event-based triggers
-        if 'expected_delivery_missed' in conditions:
-            expected_delivery = datetime.fromisoformat(order_data.get('expected_delivery', datetime.now().isoformat()))
-            if datetime.now() > expected_delivery and order_data.get('status') != 'delivered':
-                delay_days = conditions.get('delay_days', 0)
-                if (datetime.now() - expected_delivery).days >= delay_days:
-                    return True
-        
-        # Pattern-based triggers
-        if 'product_return_rate' in conditions:
-            product_return_rate = order_data.get('product_return_rate', 0)
-            threshold = float(conditions['product_return_rate'].replace('>', '').replace('%', ''))
-            if product_return_rate > threshold:
-                return True
-        
-        return False
-    
-    def _format_trigger_message(self, template: str, 
-                               order_data: Dict[str, Any],
-                               customer_data: Dict[str, Any]) -> str:
-        """
-        Format trigger message with actual data
-        
-        Args:
-            template: Message template
-            order_data: Order data
-            customer_data: Customer data
-            
-        Returns:
-            Formatted message
-        """
-        message = template
-        
-        # Replace placeholders
-        replacements = {
-            '{customer_name}': customer_data.get('name', 'there'),
-            '{product_name}': order_data.get('product_name', 'order'),
-            '{tracking_status}': order_data.get('tracking_status', 'in transit'),
-            '{ordered_size}': order_data.get('size', 'ordered size')
+        status_messages = {
+            'pending': '⏳ Your order is being prepared',
+            'processing': '📦 Your order is being processed',
+            'shipped': '🚚 Your order has been shipped',
+            'in_transit': '🚚 Your order is on the way',
+            'out_for_delivery': '📬 Your order is out for delivery today',
+            'delivered': '✅ Your order has been delivered',
+            'delayed': '⚠️ Your order is experiencing a delay'
         }
         
-        for placeholder, value in replacements.items():
-            message = message.replace(placeholder, value)
+        message = f"{status_messages.get(status, 'Your order status')}\n\n"
+        message += f"**Order:** #{order_id}\n"
+        message += f"**Carrier:** {carrier}\n"
+        message += f"**Tracking:** {tracking_number}\n"
+        message += f"**Expected Delivery:** {expected_delivery}\n"
+        
+        if issues:
+            message += f"\n⚠️ **Note:** {issues[0]['message']}\n"
         
         return message
     
-    def get_shipping_policy_info(self, query: str) -> str:
-        """
-        Answer shipping policy questions using RAG
-        
-        Args:
-            query: User's question about shipping
-            
-        Returns:
-            Answer based on shipping policy
-        """
-        # In production, use vector search on shipping_policy
-        # For now, use OpenAI with policy as context
-        
-        policy_context = json.dumps(self.shipping_policy, indent=2)
-        
-        prompt = f"""Based on the following shipping policy, answer the customer's question clearly and concisely:
-
-SHIPPING POLICY:
-{policy_context}
-
-CUSTOMER QUESTION:
-{query}
-
-Provide a helpful answer in 2-3 sentences."""
-
+    async def health_check(self) -> Dict[str, Any]:
+        """Perform health check"""
         try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                temperature=self.temperature,
-                messages=[
-                    {"role": "system", "content": "You are a helpful shipping policy expert."},
-                    {"role": "user", "content": prompt}
-                ]
+            start_time = datetime.now()
+            
+            # Test OpenAI API
+            test_response = await asyncio.wait_for(
+                self.client.chat.completions.create(
+                    model=self.model,
+                    messages=[{"role": "user", "content": "test"}],
+                    max_tokens=5
+                ),
+                timeout=10.0
             )
-            return response.choices[0].message.content
+            
+            latency = (datetime.now() - start_time).total_seconds()
+            
+            self._healthy = True
+            self._last_health_check = datetime.now()
+            
+            return {
+                'status': 'healthy',
+                'service': 'monitor_agent',
+                'openai_status': 'connected',
+                'latency_ms': latency * 1000,
+                'last_check': self._last_health_check.isoformat()
+            }
+            
         except Exception as e:
-            return "I apologize, but I'm having trouble accessing our shipping policy information right now. Would you like me to connect you with a specialist?"
+            self._healthy = False
+            logger.error(f"Health check failed: {e}")
+            
+            return {
+                'status': 'unhealthy',
+                'service': 'monitor_agent',
+                'error': str(e),
+                'last_check': datetime.now().isoformat()
+            }
+    
+    def is_healthy(self) -> bool:
+        """Quick health status check"""
+        return self._healthy

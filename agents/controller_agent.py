@@ -1,18 +1,23 @@
 """
-Controller Agent - Main Orchestrator
+Controller Agent - Main Orchestrator (Production-Ready with Async)
 Routes requests to specialized agents and manages conversation flow
 """
 
-import os
+import asyncio
 import json
+import logging
 from typing import Dict, List, Any, Optional
-from openai import OpenAI
 from datetime import datetime
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from openai import AsyncOpenAI, APIError, APITimeoutError
+
+# Configure structured logging
+logger = logging.getLogger(__name__)
 
 class ControllerAgent:
     """
     Main orchestrator that routes customer requests to specialized agents.
-    Manages conversation state and coordinates multi-agent workflows.
+    Production-ready with async, retry logic, and health monitoring.
     """
     
     def __init__(self, config: Dict[str, Any]):
@@ -22,10 +27,15 @@ class ControllerAgent:
         Args:
             config: Configuration dictionary with API keys and settings
         """
-        self.client = OpenAI(api_key=config.get('openai_api_key'))
+        self.client = AsyncOpenAI(
+            api_key=config.get('openai_api_key'),
+            timeout=config.get('timeout', 30.0),
+            max_retries=0  # We handle retries ourselves
+        )
         self.model = config.get('controller_model', 'gpt-4o')
         self.temperature = config.get('controller_temperature', 0.5)
         self.max_tokens = config.get('max_tokens', 1500)
+        self.request_timeout = config.get('request_timeout', 25.0)
         
         # Load templates and escalation rules
         self.templates = self._load_templates()
@@ -39,12 +49,22 @@ class ControllerAgent:
             'resolution_agent'
         ]
         
+        # Health status
+        self._healthy = True
+        self._last_health_check = None
+        
+        logger.info(f"ControllerAgent initialized with model={self.model}")
+    
     def _load_templates(self) -> Dict:
         """Load conversation templates"""
         try:
             with open('data/templates/conversation_templates.json', 'r') as f:
                 return json.load(f)
         except FileNotFoundError:
+            logger.warning("Conversation templates file not found, using defaults")
+            return {}
+        except Exception as e:
+            logger.error(f"Error loading templates: {e}")
             return {}
     
     def _load_escalation_rules(self) -> Dict:
@@ -53,10 +73,24 @@ class ControllerAgent:
             with open('data/playbooks/escalation_rules.json', 'r') as f:
                 return json.load(f)
         except FileNotFoundError:
+            logger.warning("Escalation rules file not found, using defaults")
+            return {}
+        except Exception as e:
+            logger.error(f"Error loading escalation rules: {e}")
             return {}
     
-    def route_request(self, user_message: str, conversation_history: List[Dict], 
-                     context: Dict[str, Any]) -> Dict[str, Any]:
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        retry=retry_if_exception_type((APIError, APITimeoutError, asyncio.TimeoutError)),
+        reraise=True
+    )
+    async def route_request(
+        self, 
+        user_message: str, 
+        conversation_history: List[Dict], 
+        context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Main routing function - determines which agent should handle the request
         
@@ -68,32 +102,41 @@ class ControllerAgent:
         Returns:
             Dictionary with routing decision and agent assignment
         """
+        start_time = datetime.now()
         
-        # Check for escalation triggers first
-        escalation_check = self._check_escalation(user_message, context)
-        if escalation_check['should_escalate']:
-            return escalation_check
-        
-        # Prepare routing prompt
-        routing_prompt = self._build_routing_prompt(
-            user_message, 
-            conversation_history, 
-            context
-        )
-        
-        # Call OpenAI to determine routing
         try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                temperature=self.temperature,
-                max_tokens=self.max_tokens,
-                messages=[
-                    {"role": "system", "content": self._get_system_prompt()},
-                    {"role": "user", "content": routing_prompt}
-                ],
-                functions=self._get_routing_functions(),
-                function_call="auto"
+            # Check for escalation triggers first
+            escalation_check = self._check_escalation(user_message, context)
+            if escalation_check['should_escalate']:
+                logger.info(f"Escalation triggered: {escalation_check['reason']}")
+                return escalation_check
+            
+            # Prepare routing prompt with context summarization
+            routing_prompt = self._build_routing_prompt(
+                user_message, 
+                conversation_history[-5:],  # Only last 5 messages
+                context
             )
+            
+            # Call OpenAI with timeout
+            try:
+                response = await asyncio.wait_for(
+                    self.client.chat.completions.create(
+                        model=self.model,
+                        temperature=self.temperature,
+                        max_tokens=self.max_tokens,
+                        messages=[
+                            {"role": "system", "content": self._get_system_prompt()},
+                            {"role": "user", "content": routing_prompt}
+                        ],
+                        functions=self._get_routing_functions(),
+                        function_call="auto"
+                    ),
+                    timeout=self.request_timeout
+                )
+            except asyncio.TimeoutError:
+                logger.error(f"Routing request timed out after {self.request_timeout}s")
+                raise
             
             # Extract function call
             message = response.choices[0].message
@@ -102,22 +145,29 @@ class ControllerAgent:
                 function_name = message.function_call.name
                 function_args = json.loads(message.function_call.arguments)
                 
+                # Log routing decision
+                elapsed = (datetime.now() - start_time).total_seconds()
+                logger.info(f"Routing decision: {function_name}, confidence: {function_args.get('confidence', 0)}, elapsed: {elapsed:.2f}s")
+                
                 return {
                     'agent': function_name,
                     'parameters': function_args,
                     'reasoning': function_args.get('reasoning', ''),
-                    'confidence': function_args.get('confidence', 0.8)
+                    'confidence': function_args.get('confidence', 0.8),
+                    'latency_ms': elapsed * 1000
                 }
             else:
                 # Default to direct response
                 return {
                     'agent': 'controller_agent',
                     'response': message.content,
-                    'parameters': {}
+                    'parameters': {},
+                    'latency_ms': (datetime.now() - start_time).total_seconds() * 1000
                 }
                 
         except Exception as e:
-            print(f"Error in routing: {e}")
+            logger.error(f"Error in routing: {type(e).__name__}: {e}", exc_info=True)
+            self._healthy = False
             return {
                 'agent': 'controller_agent',
                 'error': str(e),
@@ -141,12 +191,14 @@ If you can answer directly (simple questions), respond without calling an agent.
 Be intelligent about routing:
 - Multiple issues? Route to the most critical agent first
 - Unclear request? Ask clarifying questions before routing
-- Simple FAQ? Answer directly using your knowledge
-"""
+- Simple FAQ? Answer directly using your knowledge"""
     
-    def _build_routing_prompt(self, user_message: str, 
-                             conversation_history: List[Dict],
-                             context: Dict[str, Any]) -> str:
+    def _build_routing_prompt(
+        self, 
+        user_message: str, 
+        conversation_history: List[Dict],
+        context: Dict[str, Any]
+    ) -> str:
         """Build the routing prompt with context"""
         
         prompt_parts = [
@@ -167,8 +219,8 @@ Be intelligent about routing:
         
         if conversation_history:
             prompt_parts.append("\n=== RECENT CONVERSATION ===")
-            for msg in conversation_history[-3:]:  # Last 3 messages
-                prompt_parts.append(f"{msg['role']}: {msg['content']}")
+            for msg in conversation_history:
+                prompt_parts.append(f"{msg['role']}: {msg['content'][:200]}")  # Truncate long messages
         
         prompt_parts.append("\n=== TASK ===")
         prompt_parts.append("Determine which agent should handle this request, or respond directly if appropriate.")
@@ -294,18 +346,9 @@ Be intelligent about routing:
         ]
     
     def _check_escalation(self, user_message: str, context: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Check if the request should be escalated to human agent
+        """Check if the request should be escalated to human agent"""
         
-        Args:
-            user_message: User's message
-            context: Conversation context
-            
-        Returns:
-            Dict with escalation decision
-        """
         escalation_triggers = self.escalation_rules.get('automatic_escalation_triggers', [])
-        
         user_message_lower = user_message.lower()
         
         for trigger in escalation_triggers:
@@ -332,24 +375,17 @@ Be intelligent about routing:
                         'trigger_id': trigger['trigger_id'],
                         'agent': 'human_escalation'
                     }
-            
-            # Check customer tier triggers
-            if 'customer_tier' in trigger.get('condition', {}):
-                customer_tier = context.get('customer_tier', 'regular')
-                if customer_tier in trigger['condition']['customer_tier']:
-                    # For VIP, offer choice rather than auto-escalate
-                    if not trigger.get('auto_escalate', True):
-                        return {
-                            'should_escalate': False,
-                            'offer_escalation': True,
-                            'message': trigger.get('message', '')
-                        }
         
         return {'should_escalate': False}
     
-    def generate_response(self, message: str, context: Dict[str, Any] = None) -> str:
+    @retry(
+        stop=stop_after_attempt(2),
+        wait=wait_exponential(multiplier=1, min=1, max=5),
+        retry=retry_if_exception_type((APIError, APITimeoutError))
+    )
+    async def generate_response(self, message: str, context: Dict[str, Any] = None) -> str:
         """
-        Generate direct response for simple queries that don't need specialist agents
+        Generate direct response for simple queries
         
         Args:
             message: User message
@@ -364,17 +400,21 @@ Be intelligent about routing:
                 {"role": "user", "content": message}
             ]
             
-            response = self.client.chat.completions.create(
-                model=self.model,
-                temperature=self.temperature,
-                max_tokens=self.max_tokens,
-                messages=messages
+            response = await asyncio.wait_for(
+                self.client.chat.completions.create(
+                    model=self.model,
+                    temperature=self.temperature,
+                    max_tokens=self.max_tokens,
+                    messages=messages
+                ),
+                timeout=self.request_timeout
             )
             
             return response.choices[0].message.content
             
         except Exception as e:
-            return f"I apologize, but I encountered an error. Please try again or let me connect you with a specialist."
+            logger.error(f"Error generating response: {e}")
+            return "I apologize, but I encountered an error. Please try again or let me connect you with a specialist."
     
     def _get_response_system_prompt(self) -> str:
         """System prompt for direct responses"""
@@ -384,37 +424,67 @@ Provide clear, friendly, and concise responses to customer questions.
 Be empathetic and solution-focused.
 If the question is complex or requires specific actions, suggest routing to a specialist.
 
-Keep responses under 3 sentences for simple questions.
-"""
+Keep responses under 3 sentences for simple questions."""
+    
+    async def health_check(self) -> Dict[str, Any]:
+        """
+        Perform health check on the controller agent
+        
+        Returns:
+            Health status dictionary
+        """
+        try:
+            # Test OpenAI API connectivity
+            start_time = datetime.now()
+            
+            test_response = await asyncio.wait_for(
+                self.client.chat.completions.create(
+                    model=self.model,
+                    messages=[{"role": "user", "content": "test"}],
+                    max_tokens=5
+                ),
+                timeout=10.0
+            )
+            
+            latency = (datetime.now() - start_time).total_seconds()
+            
+            self._healthy = True
+            self._last_health_check = datetime.now()
+            
+            return {
+                'status': 'healthy',
+                'service': 'controller_agent',
+                'openai_status': 'connected',
+                'latency_ms': latency * 1000,
+                'last_check': self._last_health_check.isoformat()
+            }
+            
+        except Exception as e:
+            self._healthy = False
+            logger.error(f"Health check failed: {e}")
+            
+            return {
+                'status': 'unhealthy',
+                'service': 'controller_agent',
+                'error': str(e),
+                'last_check': datetime.now().isoformat()
+            }
+    
+    def is_healthy(self) -> bool:
+        """Quick health status check"""
+        return self._healthy
     
     def format_response(self, template_id: str, variables: Dict[str, str]) -> str:
-        """
-        Format a response using a template
-        
-        Args:
-            template_id: Template identifier
-            variables: Variables to fill in template
-            
-        Returns:
-            Formatted message string
-        """
+        """Format a response using a template"""
         templates = self.templates.get('templates', {})
         
-        # Search through all template categories
         for category in templates.values():
             if isinstance(category, list):
                 for template in category:
                     if template.get('template_id') == template_id:
                         message = template['message']
-                        # Replace variables
                         for key, value in variables.items():
                             message = message.replace(f"{{{key}}}", str(value))
                         return message
         
         return "I'm here to help! How can I assist you today?"
-    
-    def log_interaction(self, interaction_data: Dict[str, Any]):
-        """Log interaction for analytics and learning"""
-        interaction_data['timestamp'] = datetime.now().isoformat()
-        # In production, save to database
-        print(f"[LOG] {json.dumps(interaction_data, indent=2)}")
