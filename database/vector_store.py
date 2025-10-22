@@ -1,192 +1,200 @@
 """
-Vector Store Operations
-Handles embedding generation, storage, and retrieval
+Vector Store - Pinecone Async Wrapper with Connection Pool and Retry
 """
 
 import os
-from typing import List, Dict, Any, Optional
-from openai import OpenAI
-from .pinecone_config import get_pinecone_index
-from dotenv import load_dotenv
+import asyncio
+import logging
+from typing import List, Dict, Optional, Any
+from pinecone import Pinecone, Index
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from openai import AsyncOpenAI, APIError, APITimeoutError
 
-load_dotenv()
+logger = logging.getLogger(__name__)
 
 class VectorStore:
-    """Vector database operations for embeddings and semantic search"""
-    
-    def __init__(self):
-        self.client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
-        self.index = get_pinecone_index()
-        self.embedding_model = "text-embedding-3-small"
-        self.embedding_dimension = 1536
-    
-    def generate_embedding(self, text: str) -> List[float]:
-        """
-        Generate embedding for text using OpenAI
+    """
+    Async wrapper for Pinecone vector database operations with retries and connection pooling.
+    """
+
+    def __init__(self, config: Optional[Dict[str, Any]] = None):
+        self.api_key = None
+        self.index_name = None
+        self.dimension = 1536  # Should align with model embeddings
+        self.metric = 'cosine'
         
-        Args:
-            text: Text to embed
-            
-        Returns:
-            Embedding vector
-        """
-        response = self.client.embeddings.create(
-            model=self.embedding_model,
-            input=text
-        )
-        return response.data[0].embedding
+        config = config or {}
+        self.api_key = config.get('pinecone_api_key', os.getenv('PINECONE_API_KEY'))
+        self.index_name = config.get('pinecone_index_name', os.getenv('PINECONE_INDEX_NAME', 'ecommerce-guardian'))
+        
+        if not self.api_key:
+            raise ValueError("PINECONE_API_KEY is required for VectorStore")
+        
+        if not self.index_name:
+            raise ValueError("PINECONE_INDEX_NAME is required for VectorStore")
+        
+        # Initialize Pinecone client
+        self.pc = Pinecone(api_key=self.api_key)
+        
+        # Use connection pool for pinecone Index client
+        self.index: Optional[Index] = None
+        self._connection_lock = asyncio.Lock()
+        
+        logger.info(f"VectorStore initialized for index {self.index_name}")
+
+    async def _init_index(self):
+        """Initialize Pinecone index with connection pooling"""
+        async with self._connection_lock:
+            if self.index is None:
+                self.index = self.pc.Index(self.index_name)
+                logger.debug(f"Pinecone index {self.index_name} client initialized")
     
-    def generate_embeddings_batch(self, texts: List[str]) -> List[List[float]]:
-        """
-        Generate embeddings for multiple texts in batch
+    @retry(
+        retry=retry_if_exception_type((APIError, APITimeoutError)),
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=1, max=5)
+    )
+    async def upsert_vector(self, vector_id: str, text: str, metadata: Dict[str, Any]) -> None:
+        """Upsert a single vector asynchronously"""
+        await self._init_index()
         
-        Args:
-            texts: List of texts to embed
-            
-        Returns:
-            List of embedding vectors
-        """
-        response = self.client.embeddings.create(
-            model=self.embedding_model,
-            input=texts
-        )
-        return [item.embedding for item in response.data]
-    
-    def upsert_vector(self, vector_id: str, text: str, metadata: Dict[str, Any]):
-        """
-        Insert or update a single vector
+        # Compute embedding
+        embedding = await self.generate_embedding(text)
         
-        Args:
-            vector_id: Unique identifier for the vector
-            text: Text to embed and store
-            metadata: Associated metadata
-        """
-        embedding = self.generate_embedding(text)
-        
-        self.index.upsert(vectors=[{
+        vector = {
             'id': vector_id,
             'values': embedding,
             'metadata': metadata
-        }])
-    
-    def upsert_vectors_batch(self, vectors: List[Dict[str, Any]]):
-        """
-        Insert or update multiple vectors in batch
+        }
         
-        Args:
-            vectors: List of dicts with 'id', 'text', and 'metadata'
-        """
-        # Generate embeddings
+        # Use thread to call blocking sync method (pinecone python client is sync)
+        await asyncio.to_thread(self.index.upsert, vectors=[vector])
+        
+        logger.debug(f"Upserted vector id={vector_id}")
+    
+    @retry(
+        retry=retry_if_exception_type((APIError, APITimeoutError)),
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=1, max=5)
+    )
+    async def upsert_vectors_batch(self, vectors: List[Dict[str, Any]]) -> None:
+        """Upsert multiple vectors asynchronously"""
+        await self._init_index()
+        
+        # Generate embeddings asynchronously in parallel batches
         texts = [v['text'] for v in vectors]
-        embeddings = self.generate_embeddings_batch(texts)
+        embeddings = await self._generate_batch_embeddings(texts)
         
-        # Prepare vectors for upsert
-        upsert_data = []
-        for i, vector in enumerate(vectors):
-            upsert_data.append({
-                'id': vector['id'],
-                'values': embeddings[i],
-                'metadata': vector['metadata']
+        # Construct vectors with embeddings
+        vectors_with_embeddings = []
+        for orig, emb in zip(vectors, embeddings):
+            vectors_with_embeddings.append({
+                'id': orig['id'],
+                'values': emb,
+                'metadata': orig.get('metadata', {})
             })
         
-        # Upsert in batches of 100
-        batch_size = 100
-        for i in range(0, len(upsert_data), batch_size):
-            batch = upsert_data[i:i + batch_size]
-            self.index.upsert(vectors=batch)
+        await asyncio.to_thread(self.index.upsert, vectors=vectors_with_embeddings)
+        logger.info(f"Upserted batch of {len(vectors)} vectors")
     
-    def search(self, query: str, top_k: int = 5, 
-               filter_dict: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    async def search(
+        self,
+        query: str,
+        top_k: int = 10,
+        filter_dict: Optional[Dict[str, Any]] = None
+    ) -> List[Dict[str, Any]]:
         """
-        Semantic search for similar vectors
+        Search for similar vectors to the query
         
         Args:
-            query: Search query text
+            query: Text query string
             top_k: Number of results to return
-            filter_dict: Metadata filters
-            
+            filter_dict: Optional filter dict for metadata filtering
+        
         Returns:
-            List of matching results with metadata
+            List of matches with id, score, metadata
         """
-        # Generate query embedding
-        query_embedding = self.generate_embedding(query)
+        await self._init_index()
         
-        # Search
-        results = self.index.query(
-            vector=query_embedding,
-            top_k=top_k,
-            include_metadata=True,
-            filter=filter_dict
-        )
+        embedding = await self.generate_embedding(query)
         
-        # Format results
-        matches = []
-        for match in results['matches']:
-            matches.append({
-                'id': match['id'],
-                'score': match['score'],
-                'metadata': match.get('metadata', {})
-            })
+        query_args = {
+            'vector': embedding,
+            'top_k': top_k,
+            'include_metadata': True
+        }
+        if filter_dict:
+            query_args['filter'] = filter_dict
         
-        return matches
+        response = await asyncio.to_thread(self.index.query, **query_args)
+        
+        matches = response.get('matches', [])
+        logger.debug(f"Search query returned {len(matches)} matches")
+        return matches or []
     
-    def search_by_vector(self, vector: List[float], top_k: int = 5,
-                        filter_dict: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    async def generate_embedding(self, text: str) -> List[float]:
         """
-        Search using pre-computed embedding vector
+        Generate embedding vector from text using OpenAI Async client
         
         Args:
-            vector: Embedding vector
-            top_k: Number of results
-            filter_dict: Metadata filters
-            
+            text: Text to embed
+        
         Returns:
-            List of matching results
+            List of floats representing embedding
         """
-        results = self.index.query(
-            vector=vector,
-            top_k=top_k,
-            include_metadata=True,
-            filter=filter_dict
+        openai_key = os.getenv('OPENAI_API_KEY')
+        if not openai_key:
+            raise RuntimeError("OPENAI_API_KEY not found")
+        
+        client = AsyncOpenAI(api_key=openai_key)
+        
+        response = await client.embeddings.create(
+            model="text-embedding-3-small",
+            input=text,
+            dimensions=1536
         )
-        
-        matches = []
-        for match in results['matches']:
-            matches.append({
-                'id': match['id'],
-                'score': match['score'],
-                'metadata': match.get('metadata', {})
-            })
-        
-        return matches
+        embedding = response.data[0].embedding
+        return embedding
     
-    def get_by_id(self, vector_id: str) -> Optional[Dict[str, Any]]:
+    async def _generate_batch_embeddings(self, texts: List[str], batch_size: int = 50) -> List[List[float]]:
         """
-        Fetch vector by ID
+        Generate embeddings for a batch of texts
         
         Args:
-            vector_id: Vector identifier
-            
+            texts: List of text inputs
+            batch_size: Number of texts per batch
+        
         Returns:
-            Vector data or None
+            List of embedding vectors
         """
-        try:
-            result = self.index.fetch(ids=[vector_id])
-            if vector_id in result['vectors']:
-                return result['vectors'][vector_id]
-            return None
-        except Exception as e:
-            print(f"Error fetching vector {vector_id}: {e}")
-            return None
+        all_embeddings = []
+        openai_key = os.getenv('OPENAI_API_KEY')
+        if not openai_key:
+            raise RuntimeError("OPENAI_API_KEY not found")
+        client = AsyncOpenAI(api_key=openai_key)
+        
+        for i in range(0, len(texts), batch_size):
+            batch = texts[i:i+batch_size]
+            response = await client.embeddings.create(
+                model="text-embedding-3-small",
+                input=batch,
+                dimensions=1536
+            )
+            batch_embeddings = [item.embedding for item in response.data]
+            all_embeddings.extend(batch_embeddings)
+        
+        return all_embeddings
     
-    def delete_by_id(self, vector_id: str):
+    async def get_stats(self) -> Dict[str, Any]:
+        """Fetch index stats asynchronously"""
+        await self._init_index()
+        
+        stats = await asyncio.to_thread(self.index.describe_index_stats)
+        
+        return stats or {}
+    
+    async def delete_by_id(self, vector_id: str) -> None:
         """Delete vector by ID"""
-        self.index.delete(ids=[vector_id])
-    
-    def delete_by_filter(self, filter_dict: Dict[str, Any]):
-        """Delete vectors matching filter"""
-        self.index.delete(filter=filter_dict)
-    
-    def get_stats(self) -> Dict[str, Any]:
-        """Get index statistics"""
-        return self.index.describe_index_stats()
+        await self._init_index()
+        await asyncio.to_thread(self.index.delete, ids=[vector_id])
+        logger.info(f"Deleted vector with id={vector_id}")

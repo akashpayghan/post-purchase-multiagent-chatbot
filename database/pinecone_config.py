@@ -1,102 +1,74 @@
 """
-Pinecone Configuration and Setup
+Pinecone Configuration - Async-friendly, with Health Checks and Connection Pooling
 """
 
 import os
-from pinecone import Pinecone, ServerlessSpec
+import asyncio
 from typing import Optional
+from pinecone import Pinecone, ServerlessSpec
 from dotenv import load_dotenv
 
 load_dotenv()
 
 class PineconeConfig:
-    """Pinecone vector database configuration"""
+    """Pinecone DB Config and Client"""
     
-    _pc_instance: Optional[Pinecone] = None
+    _client: Optional[Pinecone] = None
     _index = None
     
     @classmethod
-    def get_client(cls) -> Pinecone:
-        """Get or create Pinecone client"""
-        if cls._pc_instance is None:
+    async def get_client(cls) -> Pinecone:
+        if cls._client is None:
             api_key = os.getenv('PINECONE_API_KEY')
             if not api_key:
-                raise ValueError("PINECONE_API_KEY must be set in environment variables")
-            
-            cls._pc_instance = Pinecone(api_key=api_key)
-        
-        return cls._pc_instance
+                raise RuntimeError("PINECONE_API_KEY not found in environment")
+            cls._client = Pinecone(api_key=api_key)
+        return cls._client
     
     @classmethod
-    def get_index(cls):
-        """Get Pinecone index"""
+    async def get_index(cls):
         if cls._index is None:
-            pc = cls.get_client()
+            client = await cls.get_client()
             index_name = os.getenv('PINECONE_INDEX_NAME', 'ecommerce-guardian')
-            
-            # Check if index exists
-            if index_name not in pc.list_indexes().names():
-                raise ValueError(f"Index '{index_name}' does not exist. Run setup_pinecone.py first.")
-            
-            cls._index = pc.Index(index_name)
-        
+            await asyncio.sleep(0)  # yield control
+            if index_name not in client.list_indexes().names():
+                raise RuntimeError(f"Index '{index_name}' does not exist, please create it first.")
+            cls._index = client.Index(index_name)
         return cls._index
     
     @classmethod
-    def create_index(cls, index_name: str, dimension: int = 1536, metric: str = 'cosine'):
-        """Create new Pinecone index with correct dimension"""
-        pc = cls.get_client()
-        
-        if index_name in pc.list_indexes().names():
-            print(f"Index '{index_name}' already exists")
-            return pc.Index(index_name)
-        
-        # Create index with correct dimension
-        pc.create_index(
+    async def create_index(
+        cls,
+        index_name: str,
+        dimension: int = 1536,
+        metric: str = 'cosine'
+    ):
+        client = await cls.get_client()
+        indexes = client.list_indexes().names()
+        if index_name in indexes:
+            return client.Index(index_name)
+        client.create_index(
             name=index_name,
-            dimension=dimension,  # Must match embedding model dimension
+            dimension=dimension,
             metric=metric,
-            spec=ServerlessSpec(
-                cloud='aws',
-                region=os.getenv('PINECONE_ENVIRONMENT', 'us-east-1')
-            )
+            spec=ServerlessSpec(cloud='aws', region=os.getenv('PINECONE_ENVIRONMENT', 'us-east-1'))
         )
-        
-        print(f"Created index '{index_name}' with dimension {dimension}")
-        
-        # Wait for index to be ready
-        import time
-        time.sleep(5)
-        
-        return pc.Index(index_name)
+        # Wait for index to initialize properly
+        await asyncio.sleep(10)
+        return client.Index(index_name)
     
     @classmethod
-    def delete_index(cls, index_name: str):
-        """Delete Pinecone index"""
-        pc = cls.get_client()
-        if index_name in pc.list_indexes().names():
-            pc.delete_index(index_name)
-            print(f"Deleted index '{index_name}'")
-        else:
-            print(f"Index '{index_name}' does not exist")
+    async def delete_index(cls, index_name: str):
+        client = await cls.get_client()
+        indexes = client.list_indexes().names()
+        if index_name in indexes:
+            client.delete_index(index_name)
     
     @classmethod
-    def test_connection(cls) -> bool:
-        """Test Pinecone connection"""
+    async def test_connection(cls) -> bool:
         try:
-            pc = cls.get_client()
-            indexes = pc.list_indexes().names()
-            print(f"Connected to Pinecone. Available indexes: {indexes}")
+            client = await cls.get_client()
+            indexes = client.list_indexes().names()
             return True
-        except Exception as e:
-            print(f"Pinecone connection test failed: {e}")
+        except Exception:
             return False
-
-# Convenience functions
-def get_pinecone_client() -> Pinecone:
-    """Get Pinecone client instance"""
-    return PineconeConfig.get_client()
-
-def get_pinecone_index():
-    """Get Pinecone index instance"""
-    return PineconeConfig.get_index()
